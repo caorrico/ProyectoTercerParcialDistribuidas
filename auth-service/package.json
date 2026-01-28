@@ -1,0 +1,31 @@
+{
+  "name": "auth-service",
+  "version": "1.0.0",
+  "description": "Servicio de autenticación y autorización con GraphQL - LogiFlow",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "nodemon --exec ts-node src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@apollo/server": "^4.9.5",
+    "graphql": "^16.8.1",
+    "typeorm": "^0.3.17",
+    "pg": "^8.11.3",
+    "reflect-metadata": "^0.1.13",
+    "dotenv": "^16.3.1",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.2",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/uuid": "^9.0.7",
+    "typescript": "^5.2.2",
+    "ts-node": "^10.9.1",
+    "nodemon": "^3.0.1"
+  }
+}
