@@ -52,7 +52,7 @@ export abstract class Vehiculo {
 
   @Column({ name: 'anio_fabricacion' })
   anioFabricacion!: string;
-
+  
   @Column()
   cilindraje!: number;
 
@@ -66,12 +66,7 @@ export abstract class Vehiculo {
   })
   estado!: EstadoVehiculo;
 
-  @Column({
-    type: 'enum',
-    enum: TipoVehiculo,
-    name: 'tipo_vehiculo'
-  })
-  tipoVehiculo!: TipoVehiculo;
+  readonly tipoVehiculo!: TipoVehiculo;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
@@ -79,6 +74,7 @@ export abstract class Vehiculo {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
 }
+
 
 @ChildEntity(TipoVehiculo.MOTO)
 export class Moto extends Vehiculo {

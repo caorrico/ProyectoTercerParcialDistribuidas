@@ -11,7 +11,7 @@ interface WebSocketContextType {
 
 const WebSocketContext = createContext<WebSocketContextType | null>(null)
 
-const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:4000/ws'
+const WS_URL = 'ws://localhost:4000/ws'
 
 export function WebSocketProvider({ children }: { children: ReactNode }) {
   const { token } = useAuth()

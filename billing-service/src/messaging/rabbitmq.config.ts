@@ -1,42 +1,46 @@
-import amqp, { Channel, Connection } from 'amqplib';
+import amqp, { Channel, ConsumeMessage, ChannelModel } from 'amqplib';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 export const EXCHANGE_NAME = 'logiflow.events';
 export const BILLING_QUEUE = 'billing.events';
+
 export const ROUTING_KEYS = {
   FACTURA_CREADA: 'factura.creada',
   FACTURA_EMITIDA: 'factura.emitida',
   FACTURA_PAGADA: 'factura.pagada',
   FACTURA_ANULADA: 'factura.anulada'
-};
+} as const;
 
-let connection: Connection | null = null;
-let channel: Channel | null = null;
+let connection: ChannelModel;
+let channel: Channel;
 
 export const connectRabbitMQ = async (): Promise<Channel> => {
-  try {
-    const rabbitUrl = process.env.RABBITMQ_URL || 'amqp://guest:guest@localhost:5672';
-    connection = await amqp.connect(rabbitUrl);
-    channel = await connection.createChannel();
+  if (channel) return channel;
 
-    await channel.assertExchange(EXCHANGE_NAME, 'topic', { durable: true });
-    await channel.assertQueue(BILLING_QUEUE, { durable: true });
+  const rabbitUrl =
+    process.env.RABBITMQ_URL ?? 'amqp://guest:guest@localhost:5672';
 
-    for (const key of Object.values(ROUTING_KEYS)) {
-      await channel.bindQueue(BILLING_QUEUE, EXCHANGE_NAME, key);
-    }
+  connection = await amqp.connect(rabbitUrl);
+  channel = await connection.createChannel();
 
-    console.log('✅ Conectado a RabbitMQ - Billing Service');
-    return channel;
-  } catch (error) {
-    console.error('❌ Error al conectar con RabbitMQ:', error);
-    throw error;
+  await channel.assertExchange(EXCHANGE_NAME, 'topic', { durable: true });
+  await channel.assertQueue(BILLING_QUEUE, { durable: true });
+
+  for (const key of Object.values(ROUTING_KEYS)) {
+    await channel.bindQueue(BILLING_QUEUE, EXCHANGE_NAME, key);
   }
+
+  return channel;
 };
 
-export const getChannel = (): Channel | null => channel;
+export const getChannel = (): Channel => {
+  if (!channel) {
+    throw new Error('RabbitMQ no inicializado');
+  }
+  return channel;
+};
 
 export const closeRabbitMQ = async (): Promise<void> => {
   try {

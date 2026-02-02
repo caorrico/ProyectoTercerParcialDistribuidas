@@ -1,6 +1,7 @@
 import { AppDataSource } from '../utils/database';
 import { Vehiculo, Moto, Liviano, Camion, Repartidor, EstadoVehiculo, TipoVehiculo, TipoEstado } from '../entities';
 import { fleetProducer } from '../messaging/fleet.producer';
+import { In } from 'typeorm';
 
 export interface CreateMotoInput {
   placa: string;
@@ -61,42 +62,44 @@ export class FleetService {
 
   // VEHÍCULOS
   async crearMoto(input: CreateMotoInput): Promise<Moto> {
-    const moto = this.motoRepository.create({
+    const motoData = {
       ...input,
       tipoVehiculo: TipoVehiculo.MOTO,
       estado: EstadoVehiculo.DISPONIBLE,
       activo: true,
       tieneCasco: input.tieneCasco ?? true
-    } as any);
-
-    await this.motoRepository.save(moto);
+    };
+    const nuevaMoto = this.motoRepository.create(motoData as any);
+    const moto = await this.motoRepository.save(nuevaMoto) as unknown as Moto;
     await fleetProducer.publishVehiculoCreado(moto);
     return moto;
   }
 
   async crearLiviano(input: CreateLivianoInput): Promise<Liviano> {
-    const liviano = this.livianoRepository.create({
+    const livianoData = {
       ...input,
       tipoVehiculo: TipoVehiculo.LIVIANO,
       estado: EstadoVehiculo.DISPONIBLE,
       activo: true
-    } as any);
+    };
 
-    await this.livianoRepository.save(liviano);
+    const nuevoLiviano = this.livianoRepository.create(livianoData as any);
+    const liviano = await this.livianoRepository.save(nuevoLiviano) as unknown as Liviano;
+    
     await fleetProducer.publishVehiculoCreado(liviano);
     return liviano;
   }
 
   async crearCamion(input: CreateCamionInput): Promise<Camion> {
-    const camion = this.camionRepository.create({
+    const nuevoCamion = this.camionRepository.create({
       ...input,
       tipoVehiculo: TipoVehiculo.CAMION,
       estado: EstadoVehiculo.DISPONIBLE,
       activo: true,
       numeroEjes: input.numeroEjes ?? 2
-    } as any);
+    });
 
-    await this.camionRepository.save(camion);
+    const camion = await this.camionRepository.save(nuevoCamion);
     await fleetProducer.publishVehiculoCreado(camion);
     return camion;
   }
@@ -151,12 +154,14 @@ export class FleetService {
       throw new Error('Ya existe un repartidor con esa identificación');
     }
 
-    const repartidor = this.repartidorRepository.create({
+    const dataRepartidor = {
       ...input,
       estado: TipoEstado.ACTIVO
-    } as any);
+    };
 
-    await this.repartidorRepository.save(repartidor);
+    const nuevoRepartidor = this.repartidorRepository.create(dataRepartidor as any);
+    const repartidor = await this.repartidorRepository.save(nuevoRepartidor) as unknown as Repartidor;
+    
     await fleetProducer.publishRepartidorCreado(repartidor);
     return repartidor;
   }
@@ -265,7 +270,7 @@ export class FleetService {
     const where = zonaId ? { zonaId, estado: TipoEstado.ACTIVO } : { estado: TipoEstado.ACTIVO };
     const repartidores = await this.repartidorRepository.find({
       where,
-      relations: ['vehiculo']
+      relations: ['vehiculoId']
     });
 
     const vehiculosIds = repartidores.filter(r => r.vehiculoId).map(r => r.vehiculoId);

@@ -1,4 +1,4 @@
-import amqp, { Channel, Connection } from 'amqplib';
+import amqp, { Channel, ConsumeMessage, ChannelModel } from 'amqplib';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -14,12 +14,12 @@ export const ROUTING_KEYS = {
   VEHICULO_ASIGNADO: 'vehiculo.asignado'
 };
 
-let connection: Connection | null = null;
-let channel: Channel | null = null;
+let connection: ChannelModel;
+let channel: Channel;
 
 export const connectRabbitMQ = async (): Promise<Channel> => {
   try {
-    const rabbitUrl = process.env.RABBITMQ_URL || 'amqp://guest:guest@localhost:5672';
+    const rabbitUrl = process.env.RABBITMQ_URL || 'amqp://admin:admin123@rabbitmq:5672';
     connection = await amqp.connect(rabbitUrl);
     channel = await connection.createChannel();
 

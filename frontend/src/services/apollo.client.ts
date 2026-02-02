@@ -1,15 +1,15 @@
 import { ApolloClient, InMemoryCache, createHttpLink, ApolloLink } from '@apollo/client'
 import { setContext } from '@apollo/client/link/context'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000'
+const API_URL = 'http://localhost:4000'
 
-// Links para cada servicio GraphQL
-const authLink = createHttpLink({ uri: `${API_URL}/auth` })
-const pedidoLink = createHttpLink({ uri: `${API_URL}/pedidos` })
-const fleetLink = createHttpLink({ uri: `${API_URL}/fleet` })
-const billingLink = createHttpLink({ uri: `${API_URL}/billing` })
+// 1. Links para cada servicio
+const authHttpLink = createHttpLink({ uri: `${API_URL}/auth` })
+const pedidoHttpLink = createHttpLink({ uri: `${API_URL}/pedidos` })
+const fleetHttpLink = createHttpLink({ uri: `${API_URL}/fleet` })
+const billingHttpLink = createHttpLink({ uri: `${API_URL}/billing` })
 
-// Agregar token de autenticación
+// 2. Middleware de autenticación
 const authMiddleware = setContext((_, { headers }) => {
   const token = localStorage.getItem('token')
   return {
@@ -20,35 +20,29 @@ const authMiddleware = setContext((_, { headers }) => {
   }
 })
 
-// Split de links basado en el nombre de la operación
-const splitLink = ApolloLink.split(
+// 3. Lógica de enrutamiento (Split)
+const directionalLink = ApolloLink.split(
   (operation) => {
-    const operationName = operation.operationName?.toLowerCase() || ''
-    if (operationName.includes('login') || operationName.includes('register') || operationName.includes('usuario')) {
-      return true
-    }
-    return false
+    const name = operation.operationName?.toLowerCase() || ''
+    return name.includes('login') || name.includes('register') || name.includes('usuario')
   },
-  authLink,
+  authHttpLink,
   ApolloLink.split(
-    (operation) => {
-      const operationName = operation.operationName?.toLowerCase() || ''
-      return operationName.includes('pedido')
-    },
-    pedidoLink,
+    (operation) => (operation.operationName?.toLowerCase() || '').includes('pedido'),
+    pedidoHttpLink,
     ApolloLink.split(
       (operation) => {
-        const operationName = operation.operationName?.toLowerCase() || ''
-        return operationName.includes('fleet') || operationName.includes('vehiculo') || operationName.includes('repartidor')
+        const name = operation.operationName?.toLowerCase() || ''
+        return name.includes('fleet') || name.includes('vehiculo') || name.includes('repartidor')
       },
-      fleetLink,
-      billingLink
+      fleetHttpLink,
+      billingHttpLink // fallback a billing
     )
   )
 )
 
 export const apolloClient = new ApolloClient({
-  link: authMiddleware.concat(authLink), // Por defecto usa auth service
+  link: authMiddleware.concat(directionalLink), 
   cache: new InMemoryCache(),
   defaultOptions: {
     watchQuery: {
@@ -57,7 +51,6 @@ export const apolloClient = new ApolloClient({
   },
 })
 
-// Clientes específicos para cada servicio
 export const createServiceClient = (serviceUrl: string) => {
   return new ApolloClient({
     link: authMiddleware.concat(createHttpLink({ uri: serviceUrl })),

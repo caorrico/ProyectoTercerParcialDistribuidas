@@ -1,4 +1,4 @@
-import amqp, { Channel, Connection } from 'amqplib';
+import amqp, { Channel, ConsumeMessage, ChannelModel } from 'amqplib';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -13,8 +13,8 @@ export const ROUTING_KEYS = {
   PEDIDO_ENTREGADO: 'pedido.entregado'
 };
 
-let connection: Connection | null = null;
-let channel: Channel | null = null;
+let connection: ChannelModel;
+let channel: Channel;
 
 export const connectRabbitMQ = async (): Promise<Channel> => {
   try {

@@ -1,13 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToMany,
+  JoinTable
+} from 'typeorm';
 import { Rol } from './Rol.entity';
-
-export enum RolNombre {
-  ROLE_CLIENTE = 'ROLE_CLIENTE',
-  ROLE_REPARTIDOR = 'ROLE_REPARTIDOR',
-  ROLE_SUPERVISOR = 'ROLE_SUPERVISOR',
-  ROLE_GERENTE = 'ROLE_GERENTE',
-  ROLE_ADMIN = 'ROLE_ADMIN'
-}
 
 @Entity('usuarios')
 export class Usuario {

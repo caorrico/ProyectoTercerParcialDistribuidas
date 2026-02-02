@@ -1,11 +1,24 @@
 import { AppDataSource } from '../utils/database';
 import { Usuario, Rol, RolNombre } from '../entities';
-import { RegisterInput, LoginInput, AuthPayload, TokenPayload } from './interfaces/interfaces';
+import {
+  RegisterInput,
+  LoginInput,
+  AuthPayload,
+  TokenPayload
+} from './interfaces/interfaces';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'logiflow-secret-key-2024';
-const JWT_EXPIRATION = process.env.JWT_EXPIRATION || '24h';
+/**
+ * Validación de configuración crítica
+ * Esto se ejecuta al cargar el módulo
+ */
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_EXPIRATION = process.env.JWT_EXPIRATION as jwt.SignOptions['expiresIn'];
+
+if (!JWT_SECRET || !JWT_EXPIRATION) {
+  throw new Error('Faltan variables de entorno JWT_SECRET o JWT_EXPIRATION');
+}
 
 export class AuthService {
   private usuarioRepository = AppDataSource.getRepository(Usuario);
@@ -14,7 +27,6 @@ export class AuthService {
   async register(input: RegisterInput): Promise<AuthPayload> {
     const { username, email, password, rol, zonaId, tipoFlota } = input;
 
-    // Verificar si el usuario ya existe
     const existingUser = await this.usuarioRepository.findOne({
       where: [{ username }, { email }]
     });
@@ -23,17 +35,17 @@ export class AuthService {
       throw new Error('El username o email ya está registrado');
     }
 
-    // Buscar o crear el rol
-    let rolEntity = await this.rolRepository.findOne({ where: { nombre: rol } });
+    let rolEntity = await this.rolRepository.findOne({
+      where: { nombre: rol }
+    });
+
     if (!rolEntity) {
       rolEntity = this.rolRepository.create({ nombre: rol });
       await this.rolRepository.save(rolEntity);
     }
 
-    // Hashear la contraseña
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Crear el usuario
     const usuario = this.usuarioRepository.create({
       username,
       email,
@@ -46,7 +58,6 @@ export class AuthService {
 
     await this.usuarioRepository.save(usuario);
 
-    // Generar token
     const token = this.generateToken(usuario);
 
     return {
@@ -70,15 +81,12 @@ export class AuthService {
       relations: ['roles']
     });
 
-    if (!usuario) {
+    if (!usuario || !usuario.activo) {
       throw new Error('Credenciales inválidas');
     }
 
-    if (!usuario.activo) {
-      throw new Error('Usuario desactivado');
-    }
-
     const isValidPassword = await bcrypt.compare(password, usuario.password);
+
     if (!isValidPassword) {
       throw new Error('Credenciales inválidas');
     }
@@ -99,34 +107,38 @@ export class AuthService {
   }
 
   async refreshToken(token: string): Promise<AuthPayload> {
+    let decoded: TokenPayload;
+
     try {
-      const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload;
-
-      const usuario = await this.usuarioRepository.findOne({
-        where: { id: decoded.userId },
-        relations: ['roles']
-      });
-
-      if (!usuario || !usuario.activo) {
-        throw new Error('Token inválido');
-      }
-
-      const newToken = this.generateToken(usuario);
-
-      return {
-        token: newToken,
-        usuario: {
-          id: usuario.id,
-          username: usuario.username,
-          email: usuario.email,
-          roles: usuario.roles.map(r => r.nombre),
-          zonaId: usuario.zonaId,
-          tipoFlota: usuario.tipoFlota
-        }
-      };
+      decoded = jwt.verify(token, JWT_SECRET as string, {
+        algorithms: ['HS256']
+      }) as unknown as TokenPayload;
     } catch {
       throw new Error('Token inválido o expirado');
     }
+
+    const usuario = await this.usuarioRepository.findOne({
+      where: { id: decoded.userId },
+      relations: ['roles']
+    });
+
+    if (!usuario || !usuario.activo) {
+      throw new Error('Token inválido');
+    }
+
+    const newToken = this.generateToken(usuario);
+
+    return {
+      token: newToken,
+      usuario: {
+        id: usuario.id,
+        username: usuario.username,
+        email: usuario.email,
+        roles: usuario.roles.map(r => r.nombre),
+        zonaId: usuario.zonaId,
+        tipoFlota: usuario.tipoFlota
+      }
+    };
   }
 
   async getUsuarioById(id: number): Promise<Usuario | null> {
@@ -137,7 +149,9 @@ export class AuthService {
   }
 
   async getAllUsuarios(): Promise<Usuario[]> {
-    return this.usuarioRepository.find({ relations: ['roles'] });
+    return this.usuarioRepository.find({
+      relations: ['roles']
+    });
   }
 
   async getUsuariosByRol(rol: RolNombre): Promise<Usuario[]> {
@@ -148,8 +162,14 @@ export class AuthService {
       .getMany();
   }
 
-  async updateUsuario(id: number, data: Partial<Usuario>): Promise<Usuario> {
-    const usuario = await this.usuarioRepository.findOne({ where: { id } });
+  async updateUsuario(
+    id: number,
+    data: Partial<Usuario>
+  ): Promise<Usuario> {
+    const usuario = await this.usuarioRepository.findOne({
+      where: { id }
+    });
+
     if (!usuario) {
       throw new Error('Usuario no encontrado');
     }
@@ -163,7 +183,10 @@ export class AuthService {
   }
 
   async deactivateUsuario(id: number): Promise<Usuario> {
-    const usuario = await this.usuarioRepository.findOne({ where: { id } });
+    const usuario = await this.usuarioRepository.findOne({
+      where: { id }
+    });
+
     if (!usuario) {
       throw new Error('Usuario no encontrado');
     }
@@ -181,11 +204,15 @@ export class AuthService {
       tipoFlota: usuario.tipoFlota
     };
 
-    return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRATION });
+    return jwt.sign(payload, JWT_SECRET as string, {
+      expiresIn: JWT_EXPIRATION
+    });
   }
 
   verifyToken(token: string): TokenPayload {
-    return jwt.verify(token, JWT_SECRET) as TokenPayload;
+    return jwt.verify(token, JWT_SECRET as string, {
+      algorithms: ['HS256']
+    }) as TokenPayload;
   }
 }
 

@@ -1,7 +1,7 @@
 import WebSocket, { WebSocketServer } from 'ws';
 import { Server } from 'http';
 import jwt from 'jsonwebtoken';
-import amqp, { Channel, Connection } from 'amqplib';
+import amqp, { Channel, ConsumeMessage, ChannelModel } from 'amqplib';
 import { JWT_SECRET } from '../config/routes.config';
 import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
@@ -18,8 +18,8 @@ interface ClientInfo {
 }
 
 const clients = new Map<WebSocket, ClientInfo>();
-let rabbitChannel: Channel | null = null;
-let rabbitConnection: Connection | null = null;
+let rabbitChannel: Channel;
+let rabbitConnection: ChannelModel;
 
 export const initWebSocket = (server: Server): WebSocketServer => {
   const wss = new WebSocketServer({ server, path: '/ws' });

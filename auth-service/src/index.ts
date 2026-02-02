@@ -6,6 +6,8 @@ import { resolvers } from './resolvers';
 import { initializeDatabase } from './utils/database';
 import { authService } from './services/auth.service';
 import dotenv from 'dotenv';
+import 'dotenv/config';
+
 
 dotenv.config();
 

@@ -1,5 +1,4 @@
 import amqp, { Channel, ConsumeMessage, ChannelModel } from 'amqplib';
-import { notificationService } from '../notifications/service/notification.service';
 import { NotificationEvent } from './interfaces/notification-event.interface';
 import dotenv from 'dotenv';
 
