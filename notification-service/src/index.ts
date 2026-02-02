@@ -84,10 +84,10 @@ const startServer = async () => {
   await initializeDatabase();
   await connectAndConsume();
 
-  const PORT = process.env.PORT || 4005;
+  const PORT = process.env.PORT;
   app.listen(PORT, () => {
-    console.log(`🚀 Notification Service corriendo en http://localhost:${PORT}`);
-    console.log(`📊 API REST disponible para consultas`);
+    console.log(`Notification Service corriendo en http://localhost:15672`);
+    console.log(`API REST disponible para consultas`);
   });
 
   process.on('SIGINT', async () => {

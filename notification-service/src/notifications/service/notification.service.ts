@@ -30,7 +30,7 @@ export class NotificationService {
     });
 
     await this.notificationRepository.save(notification);
-    console.log(`📥 Notificación guardada: ${event.action} - ${event.message}`);
+    console.log(`Notificación guardada: ${event.action} - ${event.message}`);
 
     return notification;
   }
