@@ -1,6 +1,19 @@
 import { AppDataSource } from '../utils/database';
-import { Pedido, EstadoPedido, TipoEntrega } from '../entities';
+import { Pedido, EstadoPedido, TipoEntrega} from '../entities';
 import { pedidoProducer } from '../messaging/pedido.producer';
+
+enum RolNombre {
+  ROLE_CLIENTE = 'ROLE_CLIENTE',
+  ROLE_REPARTIDOR = 'ROLE_REPARTIDOR',
+  ROLE_SUPERVISOR = 'ROLE_SUPERVISOR',
+  ROLE_GERENTE = 'ROLE_GERENTE',
+  ROLE_ADMIN = 'ROLE_ADMIN'
+}
+
+export interface TomarPedidoInput {
+  pedidoId: number;
+  vehiculoId: number;
+}
 
 export interface CreatePedidoInput {
   clienteId: number;
@@ -39,11 +52,23 @@ export interface PedidoFiltro {
 export class PedidoService {
   private pedidoRepository = AppDataSource.getRepository(Pedido);
 
-  async crearPedido(input: CreatePedidoInput): Promise<Pedido> {
+  async crearPedido(input: CreatePedidoInput,  user: { userId: number; roles: string[] }): Promise<Pedido> {
     const pedido = this.pedidoRepository.create({
       ...input,
       estado: EstadoPedido.RECIBIDO
     });
+
+    if (user.roles.includes(RolNombre.ROLE_REPARTIDOR)) {
+      throw new Error('Un repartidor no puede crear pedidos');
+    }
+
+    if (
+      user.roles.includes(RolNombre.ROLE_CLIENTE) &&
+      input.clienteId !== user.userId
+    ) {
+      throw new Error('No puede crear pedidos para otro cliente');
+    }
+
 
     await this.pedidoRepository.save(pedido);
 
@@ -91,6 +116,44 @@ export class PedidoService {
     queryBuilder.orderBy('pedido.createdAt', 'DESC');
     return queryBuilder.getMany();
   }
+
+async tomarPedido(
+    input: TomarPedidoInput,
+    user: { userId: number; roles: string[] }
+  ): Promise<Pedido> {
+
+    // 1. Validar rol
+    if (!user.roles.includes(RolNombre.ROLE_REPARTIDOR)) {
+      throw new Error('Solo un repartidor puede tomar pedidos');
+    }
+
+    // 2. Obtener pedido
+    const pedido = await this.pedidoRepository.findOne({
+      where: { id: input.pedidoId }
+    });
+
+    if (!pedido) {
+      throw new Error('Pedido no encontrado');
+    }
+
+    // 3. Validar estado
+    if (pedido.estado !== EstadoPedido.RECIBIDO) {
+      throw new Error('El pedido no está disponible para ser tomado');
+    }
+
+    // 4. Cambios de dominio
+    pedido.repartidorId = user.userId;
+    pedido.estado = EstadoPedido.EN_RUTA;
+
+    // 5. Persistencia
+    const pedidoActualizado = await this.pedidoRepository.save(pedido);
+
+    // 6. Evento (fleet-service reaccionará)
+    await pedidoProducer.publishPedidoEnRuta(pedidoActualizado);
+
+    return pedidoActualizado;
+  }
+
 
   async listarPedidosPorCliente(clienteId: number): Promise<Pedido[]> {
     return this.pedidoRepository.find({

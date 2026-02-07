@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { gql, useMutation } from '@apollo/client'
 
 interface User {
-  id: string
+  id: number
   username: string
   email: string
   roles: string[]
@@ -95,7 +95,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(usuario)
     localStorage.setItem('token', newToken)
     localStorage.setItem('user', JSON.stringify(usuario))
-    navigate('/')
+    if (usuario.roles.includes('ROLE_REPARTIDOR')) {
+      navigate('/repartidor')
+    } else {
+      navigate('/dashboard')
+    }
   }
 
   const register = async (registerData: RegisterData) => {
@@ -108,7 +112,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(usuario)
     localStorage.setItem('token', newToken)
     localStorage.setItem('user', JSON.stringify(usuario))
-    navigate('/')
+    if (usuario.roles.includes('ROLE_REPARTIDOR')) {
+      navigate('/repartidor')
+    } else {
+      navigate('/dashboard')
+    }
   }
 
   const logout = () => {

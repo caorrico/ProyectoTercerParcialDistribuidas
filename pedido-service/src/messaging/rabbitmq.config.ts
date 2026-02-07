@@ -10,7 +10,8 @@ export const ROUTING_KEYS = {
   PEDIDO_ACTUALIZADO: 'pedido.estado.actualizado',
   PEDIDO_ASIGNADO: 'pedido.asignado',
   PEDIDO_CANCELADO: 'pedido.cancelado',
-  PEDIDO_ENTREGADO: 'pedido.entregado'
+  PEDIDO_ENTREGADO: 'pedido.entregado',
+  PEDIDO_EN_RUTA: 'pedido.en.ruta'
 };
 
 let connection: ChannelModel;

@@ -42,23 +42,22 @@ export const typeDefs = `#graphql
     C
     E
   }
+interface VehiculoGQL {
+  id: ID!
+  placa: String!
+  marca: String!
+  modelo: String!
+  color: String!
+  anioFabricacion: String!
+  cilindraje: Int!
+  activo: Boolean!
+  estado: EstadoVehiculo!
+  tipoVehiculo: TipoVehiculo!
+  createdAt: String!
+  updatedAt: String!
+}
 
-  interface Vehiculo {
-    id: ID!
-    placa: String!
-    marca: String!
-    modelo: String!
-    color: String!
-    anioFabricacion: String!
-    cilindraje: Int!
-    activo: Boolean!
-    estado: EstadoVehiculo!
-    tipoVehiculo: TipoVehiculo!
-    createdAt: String!
-    updatedAt: String!
-  }
-
-  type Moto implements Vehiculo {
+  type Moto implements VehiculoGQL {
     id: ID!
     placa: String!
     marca: String!
@@ -75,7 +74,7 @@ export const typeDefs = `#graphql
     updatedAt: String!
   }
 
-  type Liviano implements Vehiculo {
+  type Liviano implements VehiculoGQL {
     id: ID!
     placa: String!
     marca: String!
@@ -96,7 +95,7 @@ export const typeDefs = `#graphql
     updatedAt: String!
   }
 
-  type Camion implements Vehiculo {
+  type Camion implements VehiculoGQL {
     id: ID!
     placa: String!
     marca: String!
@@ -126,7 +125,7 @@ export const typeDefs = `#graphql
     estado: TipoEstado!
     zonaId: String
     usuarioId: Int
-    vehiculo: Vehiculo
+    vehiculo: VehiculoGQL
     latActual: Float
     lngActual: Float
     ultimaActualizacionUbicacion: String
@@ -193,11 +192,11 @@ export const typeDefs = `#graphql
 
   type Query {
     # Vehículos
-    vehiculos: [Vehiculo!]!
-    vehiculosPorTipo(tipo: TipoVehiculo!): [Vehiculo!]!
-    vehiculosDisponibles: [Vehiculo!]!
-    vehiculo(id: ID!): Vehiculo
-    vehiculoPorPlaca(placa: String!): Vehiculo
+    vehiculos: [VehiculoGQL!]!
+    vehiculosPorTipo(tipo: TipoVehiculo!): [VehiculoGQL!]!
+    vehiculosDisponibles: [VehiculoGQL!]!
+    vehiculo(id: ID!): VehiculoGQL
+    vehiculoPorPlaca(placa: String!): VehiculoGQL
 
     # Repartidores
     repartidores: [Repartidor!]!
@@ -216,7 +215,7 @@ export const typeDefs = `#graphql
     crearCamion(input: CreateCamionInput!): Camion!
 
     # Actualizar estado vehículo
-    actualizarEstadoVehiculo(placa: String!, estado: EstadoVehiculo!): Vehiculo!
+    actualizarEstadoVehiculo(placa: String!, estado: EstadoVehiculo!): VehiculoGQL!
 
     # Repartidores
     crearRepartidor(input: CreateRepartidorInput!): Repartidor!

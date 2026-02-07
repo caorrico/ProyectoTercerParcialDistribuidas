@@ -1,17 +1,14 @@
 import { useState } from 'react'
 import { gql, useQuery, useMutation } from '@apollo/client'
-import { pedidoClient } from '../services/apollo.client'
+import { pedidoClient, fleetClient } from '../services/apollo.client'
 
 const GET_PEDIDOS = gql`
   query GetPedidos {
     pedidos {
       id
       codigo
-      clienteId
-      repartidorId
       direccionOrigen
       direccionDestino
-      descripcion
       estado
       tipoEntrega
       createdAt
@@ -19,11 +16,40 @@ const GET_PEDIDOS = gql`
   }
 `
 
-const CREATE_PEDIDO = gql`
-  mutation CrearPedido($input: CreatePedidoInput!) {
-    crearPedido(input: $input) {
+const GET_VEHICULOS_DISPONIBLES = gql`
+  query GetVehiculosDisponibles {
+    vehiculosDisponibles {
       id
-      codigo
+      placa
+      tipo
+      estado
+    }
+  }
+`
+
+const TOMAR_PEDIDO = gql`
+  mutation TomarPedido($input: TomarPedidoInput!) {
+    tomarPedido(input: $input) {
+      id
+      estado
+      vehiculoId
+    }
+  }
+`
+
+const INICIAR_ENTREGA = gql`
+  mutation IniciarEntrega($id: ID!) {
+    iniciarEntrega(id: $id) {
+      id
+      estado
+    }
+  }
+`
+
+const CONFIRMAR_ENTREGA = gql`
+  mutation ConfirmarEntrega($id: ID!) {
+    confirmarEntrega(id: $id) {
+      id
       estado
     }
   }
@@ -31,138 +57,118 @@ const CREATE_PEDIDO = gql`
 
 export default function Pedidos() {
   const { data, loading, refetch } = useQuery(GET_PEDIDOS, { client: pedidoClient })
-  const [createPedido] = useMutation(CREATE_PEDIDO, { client: pedidoClient })
-  const [showForm, setShowForm] = useState(false)
-  const [formData, setFormData] = useState({
-    clienteId: 1,
-    direccionOrigen: '',
-    direccionDestino: '',
-    descripcion: '',
-    tipoEntrega: 'URBANO'
-  })
+  const { data: vehiculosData } = useQuery(GET_VEHICULOS_DISPONIBLES, { client: fleetClient })
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    try {
-      await createPedido({ variables: { input: formData } })
-      setShowForm(false)
-      setFormData({ clienteId: 1, direccionOrigen: '', direccionDestino: '', descripcion: '', tipoEntrega: 'URBANO' })
-      refetch()
-    } catch (error) {
-      console.error('Error creando pedido:', error)
-    }
+  const [tomarPedido] = useMutation(TOMAR_PEDIDO, { client: pedidoClient })
+  const [iniciarEntrega] = useMutation(INICIAR_ENTREGA, { client: pedidoClient })
+  const [confirmarEntrega] = useMutation(CONFIRMAR_ENTREGA, { client: pedidoClient })
+
+  // 👉 Vehículo seleccionado POR pedido
+  const [vehiculoSeleccionado, setVehiculoSeleccionado] =
+    useState<Record<number, number>>({})
+
+  const handleTomarPedido = async (pedidoId: number) => {
+    const vehiculoId = vehiculoSeleccionado[pedidoId]
+    if (!vehiculoId) return alert('Selecciona un vehículo')
+
+    await tomarPedido({
+      variables: {
+        input: { pedidoId, vehiculoId }
+      }
+    })
+
+    refetch()
   }
 
   const getEstadoBadge = (estado: string) => {
-    const badges: Record<string, string> = {
+    const map: Record<string, string> = {
       RECIBIDO: 'badge-info',
       ASIGNADO: 'badge-warning',
       EN_RUTA: 'badge-warning',
       ENTREGADO: 'badge-success',
       CANCELADO: 'badge-danger'
     }
-    return badges[estado] || 'badge-info'
+    return map[estado] || 'badge-info'
   }
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1>Gestión de Pedidos</h1>
-        <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
-          {showForm ? 'Cancelar' : 'Nuevo Pedido'}
-        </button>
-      </div>
+    <div className="card">
+      {loading ? (
+        <p>Cargando pedidos...</p>
+      ) : (
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Origen</th>
+              <th>Destino</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data?.pedidos?.map((p: any) => (
+              <tr key={p.id}>
+                <td>{p.codigo}</td>
+                <td>{p.direccionOrigen}</td>
+                <td>{p.direccionDestino}</td>
+                <td>
+                  <span className={`badge ${getEstadoBadge(p.estado)}`}>
+                    {p.estado}
+                  </span>
+                </td>
+                <td>
+                  {p.estado === 'RECIBIDO' && (
+                    <>
+                      <select
+                        value={vehiculoSeleccionado[p.id] || ''}
+                        onChange={(e) =>
+                          setVehiculoSeleccionado({
+                            ...vehiculoSeleccionado,
+                            [p.id]: Number(e.target.value)
+                          })
+                        }
+                      >
+                        <option value="">Vehículo</option>
+                        {vehiculosData?.vehiculosDisponibles?.map((v: any) => (
+                          <option key={v.id} value={v.id}>
+                            {v.placa} - {v.tipo}
+                          </option>
+                        ))}
+                      </select>
 
-      {showForm && (
-        <div className="card" style={{ marginBottom: '20px' }}>
-          <h3 style={{ marginBottom: '15px' }}>Crear Nuevo Pedido</h3>
-          <form onSubmit={handleSubmit}>
-            <div className="grid grid-2">
-              <div className="form-group">
-                <label>Dirección Origen</label>
-                <input
-                  type="text"
-                  value={formData.direccionOrigen}
-                  onChange={(e) => setFormData({ ...formData, direccionOrigen: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Dirección Destino</label>
-                <input
-                  type="text"
-                  value={formData.direccionDestino}
-                  onChange={(e) => setFormData({ ...formData, direccionDestino: e.target.value })}
-                  required
-                />
-              </div>
-            </div>
-            <div className="form-group">
-              <label>Descripción</label>
-              <textarea
-                value={formData.descripcion}
-                onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
-                required
-                rows={3}
-              />
-            </div>
-            <div className="form-group">
-              <label>Tipo de Entrega</label>
-              <select
-                value={formData.tipoEntrega}
-                onChange={(e) => setFormData({ ...formData, tipoEntrega: e.target.value })}
-              >
-                <option value="URBANO">Urbano</option>
-                <option value="INTERMUNICIPAL">Intermunicipal</option>
-                <option value="NACIONAL">Nacional</option>
-              </select>
-            </div>
-            <button type="submit" className="btn btn-success">Crear Pedido</button>
-          </form>
-        </div>
-      )}
+                      <button
+                        className="btn btn-sm btn-primary"
+                        onClick={() => handleTomarPedido(p.id)}
+                      >
+                        Tomar
+                      </button>
+                    </>
+                  )}
 
-      <div className="card">
-        {loading ? (
-          <p>Cargando pedidos...</p>
-        ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Código</th>
-                <th>Origen</th>
-                <th>Destino</th>
-                <th>Tipo</th>
-                <th>Estado</th>
-                <th>Fecha</th>
+                  {p.estado === 'ASIGNADO' && (
+                    <button
+                      className="btn btn-sm btn-warning"
+                      onClick={() => iniciarEntrega({ variables: { id: p.id } })}
+                    >
+                      Iniciar ruta
+                    </button>
+                  )}
+
+                  {p.estado === 'EN_RUTA' && (
+                    <button
+                      className="btn btn-sm btn-success"
+                      onClick={() => confirmarEntrega({ variables: { id: p.id } })}
+                    >
+                      Entregar
+                    </button>
+                  )}
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {data?.pedidos?.map((pedido: any) => (
-                <tr key={pedido.id}>
-                  <td><strong>{pedido.codigo}</strong></td>
-                  <td>{pedido.direccionOrigen}</td>
-                  <td>{pedido.direccionDestino}</td>
-                  <td>{pedido.tipoEntrega}</td>
-                  <td>
-                    <span className={`badge ${getEstadoBadge(pedido.estado)}`}>
-                      {pedido.estado}
-                    </span>
-                  </td>
-                  <td>{new Date(pedido.createdAt).toLocaleDateString()}</td>
-                </tr>
-              ))}
-              {(!data?.pedidos || data.pedidos.length === 0) && (
-                <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', color: '#6b7280' }}>
-                    No hay pedidos registrados
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        )}
-      </div>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   )
 }

@@ -13,6 +13,12 @@ export const typeDefs = `#graphql
     NACIONAL
   }
 
+  input TomarPedidoInput {
+  pedidoId: ID!
+  vehiculoId: ID!
+  }
+
+
   type Pedido {
     id: ID!
     codigo: String!
@@ -24,6 +30,7 @@ export const typeDefs = `#graphql
     estado: EstadoPedido!
     tipoEntrega: TipoEntrega!
     zonaId: String
+    vehiculoId: ID
     peso: Float
     latOrigen: Float
     lngOrigen: Float
@@ -123,5 +130,7 @@ export const typeDefs = `#graphql
 
     # Marcar pedido como entregado
     confirmarEntrega(id: ID!): Pedido!
+
+    tomarPedido(input: TomarPedidoInput!): Pedido!
   }
 `;

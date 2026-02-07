@@ -1,6 +1,9 @@
-import { gql, useQuery } from '@apollo/client'
+import { gql, useQuery, useMutation } from '@apollo/client'
 import { fleetClient } from '../services/apollo.client'
+import { useState } from 'react'
+import { useAuth } from '../context/AuthContext'
 
+// Modificamos la query para manejar tipos abstractos (Soluciona Error 2)
 const GET_VEHICULOS = gql`
   query GetVehiculos {
     vehiculos {
@@ -8,9 +11,11 @@ const GET_VEHICULOS = gql`
       placa
       marca
       modelo
-      tipoVehiculo
       estado
       activo
+      ... on Moto { tipoMoto }
+      ... on Liviano { tipoAuto }
+      ... on Camion { capacidadToneladas }
     }
   }
 `
@@ -27,27 +32,72 @@ const GET_REPARTIDORES = gql`
       estado
       vehiculo {
         placa
-        tipoVehiculo
       }
     }
   }
 `
 
 const GET_FLOTA_ACTIVA = gql`
-  query GetFlotaActiva {
-    flotaActiva {
-      total
-      disponibles
-      enRuta
-      mantenimiento
-    }
+  query FleetFlotaActiva {
+  flotaActiva {
+    total
+    disponibles
+    enRuta
+    mantenimiento
+  }
+}
+`
+
+const CREAR_MOTO = gql`
+  mutation CrearMoto($input: CreateMotoInput!) {
+    crearMoto(input: $input) { id placa }
   }
 `
 
 export default function Fleet() {
-  const { data: vehiculosData, loading: loadingVehiculos } = useQuery(GET_VEHICULOS, { client: fleetClient })
+
+  const { user } = useAuth()
+
+  const isAdminLike = user?.roles?.some(r =>
+    ['ROLE_ADMIN', 'ROLE_GERENTE', 'ROLE_SUPERVISOR'].includes(r)
+  )
+
+  const isRepartidor = user?.roles?.includes('ROLE_REPARTIDOR')
+
+  // Estados para el formulario
+  const [showForm, setShowForm] = useState(false)
+  const [tipo, setTipo] = useState('MOTO')
+  const [formData, setFormData] = useState({
+    placa: '', marca: '', modelo: '', color: '', anioFabricacion: '2024', cilindraje: 150, tipoMoto: 'NAKED'
+  })
+
+  // Queries
+  const { data: vehiculosData, loading: loadingVehiculos, refetch: refetchVehiculos } = useQuery(GET_VEHICULOS, { client: fleetClient })
   const { data: repartidoresData, loading: loadingRepartidores } = useQuery(GET_REPARTIDORES, { client: fleetClient })
-  const { data: flotaData } = useQuery(GET_FLOTA_ACTIVA, { client: fleetClient })
+  const { data: flotaData, refetch: refetchFlota } = useQuery(GET_FLOTA_ACTIVA, { client: fleetClient })
+
+  // Mutación
+  const [crearMoto] = useMutation(CREAR_MOTO, { 
+    client: fleetClient,
+    onCompleted: () => {
+      refetchVehiculos()
+      refetchFlota()
+      setShowForm(false)
+      alert('Vehículo añadido!')
+    }
+  })
+
+  const handleAddVehicle = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      if (tipo === 'MOTO') {
+        await crearMoto({ variables: { input: formData } })
+      }
+      // Aquí podrías añadir las condiciones para LIVIANO y CAMION
+    } catch (err) {
+      alert('Error al crear: ' + err)
+    }
+  }
 
   const getEstadoBadge = (estado: string) => {
     const badges: Record<string, string> = {
@@ -62,7 +112,32 @@ export default function Fleet() {
 
   return (
     <div>
-      <h1 style={{ marginBottom: '20px' }}>Gestión de Flota</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h1>Gestión de Flota</h1>
+        {isAdminLike && (
+        <button onClick={() => setShowForm(!showForm)}>
+          + Añadir Vehículo
+        </button>
+        )}
+      </div>
+
+      {/* Formulario de Adición */}
+
+      {isAdminLike && showForm && (
+        <div className="card" style={{ marginBottom: '20px', border: '1px solid #3b82f6' }}>
+          <form onSubmit={handleAddVehicle} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', padding: '10px' }}>
+            <input placeholder="Placa" required onChange={e => setFormData({...formData, placa: e.target.value})} />
+            <input placeholder="Marca" required onChange={e => setFormData({...formData, marca: e.target.value})} />
+            <input placeholder="Modelo" required onChange={e => setFormData({...formData, modelo: e.target.value})} />
+            <input placeholder="Color" required onChange={e => setFormData({...formData, color: e.target.value})} />
+            <select value={tipo} onChange={e => setTipo(e.target.value)}>
+              <option value="MOTO">Moto</option>
+              <option value="LIVIANO">Liviano </option>
+            </select>
+            <button type="submit" className="badge-success" style={{ cursor: 'pointer' }}>Guardar</button>
+          </form>
+        </div>
+      )}
 
       {/* Estadísticas */}
       <div className="grid grid-4" style={{ marginBottom: '30px' }}>
@@ -98,7 +173,6 @@ export default function Fleet() {
                 <tr>
                   <th>Placa</th>
                   <th>Marca/Modelo</th>
-                  <th>Tipo</th>
                   <th>Estado</th>
                 </tr>
               </thead>
@@ -107,7 +181,6 @@ export default function Fleet() {
                   <tr key={v.id}>
                     <td><strong>{v.placa}</strong></td>
                     <td>{v.marca} {v.modelo}</td>
-                    <td>{v.tipoVehiculo}</td>
                     <td>
                       <span className={`badge ${getEstadoBadge(v.estado)}`}>
                         {v.estado}
@@ -115,19 +188,13 @@ export default function Fleet() {
                     </td>
                   </tr>
                 ))}
-                {(!vehiculosData?.vehiculos || vehiculosData.vehiculos.length === 0) && (
-                  <tr>
-                    <td colSpan={4} style={{ textAlign: 'center', color: '#6b7280' }}>
-                      No hay vehículos registrados
-                    </td>
-                  </tr>
-                )}
               </tbody>
             </table>
           )}
         </div>
 
         {/* Repartidores */}
+        {isRepartidor && (
         <div className="card">
           <div className="card-header">
             <h3 className="card-title">Repartidores</h3>
@@ -139,7 +206,6 @@ export default function Fleet() {
               <thead>
                 <tr>
                   <th>Nombre</th>
-                  <th>Licencia</th>
                   <th>Vehículo</th>
                   <th>Estado</th>
                 </tr>
@@ -148,7 +214,6 @@ export default function Fleet() {
                 {repartidoresData?.repartidores?.map((r: any) => (
                   <tr key={r.id}>
                     <td><strong>{r.nombre} {r.apellido}</strong></td>
-                    <td>{r.tipoLicencia}</td>
                     <td>{r.vehiculo?.placa || 'Sin asignar'}</td>
                     <td>
                       <span className={`badge ${getEstadoBadge(r.estado)}`}>
@@ -157,17 +222,11 @@ export default function Fleet() {
                     </td>
                   </tr>
                 ))}
-                {(!repartidoresData?.repartidores || repartidoresData.repartidores.length === 0) && (
-                  <tr>
-                    <td colSpan={4} style={{ textAlign: 'center', color: '#6b7280' }}>
-                      No hay repartidores registrados
-                    </td>
-                  </tr>
-                )}
               </tbody>
             </table>
           )}
         </div>
+        )}
       </div>
     </div>
   )

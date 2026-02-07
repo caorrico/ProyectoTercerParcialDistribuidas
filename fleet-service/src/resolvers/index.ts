@@ -9,18 +9,12 @@ export const resolvers = {
   Mutation: {
     ...fleetMutations
   },
-  Vehiculo: {
-    __resolveType(obj: { tipoVehiculo: TipoVehiculo }) {
-      switch (obj.tipoVehiculo) {
-        case TipoVehiculo.MOTO:
-          return 'Moto';
-        case TipoVehiculo.LIVIANO:
-          return 'Liviano';
-        case TipoVehiculo.CAMION:
-          return 'Camion';
-        default:
-          return null;
-      }
-    }
-  }
+  VehiculoGQL: {
+    __resolveType(obj: any) {
+      if (obj.tipoMoto) return 'Moto';
+      if (obj.tipoAuto) return 'Liviano';
+      if (obj.capacidadToneladas) return 'Camion';
+      return null;
+    },
+  },
 };

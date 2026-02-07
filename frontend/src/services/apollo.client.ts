@@ -1,4 +1,4 @@
-import { ApolloClient, InMemoryCache, createHttpLink, ApolloLink } from '@apollo/client'
+import { ApolloClient, InMemoryCache, createHttpLink, ApolloLink, gql } from '@apollo/client'
 import { setContext } from '@apollo/client/link/context'
 
 const API_URL = 'http://localhost:4000'
@@ -20,11 +20,39 @@ const authMiddleware = setContext((_, { headers }) => {
   }
 })
 
+export const TOMAR_PEDIDO = gql`
+  mutation TomarPedido($id: ID!) {
+    tomarPedido(idPedido: $id) {
+      id
+      estado
+    }
+  }
+`;
+
+export const MARCAR_EN_RUTA = gql`
+  mutation MarcarEnRuta($id: ID!) {
+    marcarPedidoEnRuta(idPedido: $id) {
+      id
+      estado
+    }
+  }
+`;
+
+export const MARCAR_ENTREGADO = gql`
+  mutation MarcarEntregado($id: ID!) {
+    marcarPedidoEntregado(idPedido: $id) {
+      id
+      estado
+    }
+  }
+`;
+
+
 // 3. Lógica de enrutamiento (Split)
 const directionalLink = ApolloLink.split(
   (operation) => {
     const name = operation.operationName?.toLowerCase() || ''
-    return name.includes('login') || name.includes('register') || name.includes('usuario')
+    return name.includes('login') || name.includes('register') || name.includes('vehiculos') || name.includes('usuario')
   },
   authHttpLink,
   ApolloLink.split(

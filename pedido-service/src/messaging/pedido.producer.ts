@@ -44,6 +44,33 @@ export class PedidoProducer {
     };
   }
 
+async publishPedidoEnRuta(pedido: Pedido): Promise<void> {
+  const channel = getChannel();
+  if (!channel) {
+    console.error('Canal RabbitMQ no disponible');
+    return;
+  }
+
+  const event = this.createEvent(
+    'PEDIDO_EN_RUTA',
+    pedido,
+    `Pedido ${pedido.codigo} en ruta`
+  );
+
+  (event.data as Record<string, unknown>).vehiculoId = pedido.id;
+
+  channel.publish(
+    EXCHANGE_NAME,
+    ROUTING_KEYS.PEDIDO_EN_RUTA,
+    Buffer.from(JSON.stringify(event)),
+    { persistent: true, messageId: event.id }
+  );
+
+  console.log(`📤 Evento publicado: ${ROUTING_KEYS.PEDIDO_EN_RUTA}`, event.id);
+}
+
+
+
   async publishPedidoCreado(pedido: Pedido): Promise<void> {
     const channel = getChannel();
     if (!channel) {

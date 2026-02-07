@@ -5,10 +5,17 @@ export default function Dashboard() {
   const { user } = useAuth()
   const { notifications, isConnected } = useWebSocket()
 
+  const isAdminLike = user?.roles?.some(r =>
+    ['ROLE_ADMIN', 'ROLE_GERENTE', 'ROLE_SUPERVISOR'].includes(r)
+  )
+
+  const isRepartidor = user?.roles?.includes('ROLE_REPARTIDOR')
+
   return (
     <div>
       <h1 style={{ marginBottom: '20px' }}>Dashboard</h1>
 
+  {isAdminLike && (
       <div className="grid grid-4" style={{ marginBottom: '30px' }}>
         <div className="card stat-card">
           <div className="stat-value">--</div>
@@ -27,8 +34,10 @@ export default function Dashboard() {
           <div className="stat-label">Facturado</div>
         </div>
       </div>
+  )};
 
       <div className="grid grid-2">
+        
         <div className="card">
           <div className="card-header">
             <h3 className="card-title">Información de Usuario</h3>
@@ -63,6 +72,8 @@ export default function Dashboard() {
           </table>
         </div>
 
+
+        {(isAdminLike || isRepartidor) && (
         <div className="card">
           <div className="card-header">
             <h3 className="card-title">Eventos en Tiempo Real</h3>
@@ -94,6 +105,7 @@ export default function Dashboard() {
             )}
           </div>
         </div>
+        )}
       </div>
     </div>
   )
