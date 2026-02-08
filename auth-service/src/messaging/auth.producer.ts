@@ -26,7 +26,7 @@ export const publishUsuarioCreado = async (usuario: {
   const channel = getChannel();
   
   if (!channel) {
-    console.warn('RabbitMQ no disponible, evento no publicado');
+    console.warn('⚠️  RabbitMQ no disponible (channel undefined), evento usuario.creado no publicado');
     return;
   }
 
@@ -47,16 +47,22 @@ export const publishUsuarioCreado = async (usuario: {
   const routingKey = 'usuario.creado';
 
   try {
-    channel.publish(
+    console.log(`📤 Publicando evento: ${routingKey} (usuario: ${usuario.username})`);
+    
+    const published = channel.publish(
       EXCHANGE_NAME,
       routingKey,
       Buffer.from(JSON.stringify(event)),
       { persistent: true }
     );
 
-    console.log(`Evento publicado: ${routingKey}`, event.eventId);
+    if (published) {
+      console.log(`✅ Evento publicado exitosamente: ${routingKey} - ${event.eventId}`);
+    } else {
+      console.warn(`⚠️  Buffer lleno, evento en cola pero no publicado: ${routingKey}`);
+    }
   } catch (error) {
-    console.error('Error publicando evento de usuario:', error);
+    console.error('❌ Error publicando evento de usuario:', error);
   }
 };
 

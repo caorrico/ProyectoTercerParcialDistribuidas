@@ -22,12 +22,12 @@
 
 ### Software Necesario
 
-| Software | Versión Mínima | URL |
-|----------|---------------|-----|
-| **Node.js** | 18.x | https://nodejs.org/ |
-| **PostgreSQL** | 14.x | https://www.postgresql.org/download/ |
-| **RabbitMQ** | 3.x | https://www.rabbitmq.com/download.html |
-| **Postman** | Última | https://www.postman.com/downloads/ |
+| Software             | Versión Mínima | URL                                    |
+| -------------------- | ---------------- | -------------------------------------- |
+| **Node.js**    | 18.x             | https://nodejs.org/                    |
+| **PostgreSQL** | 14.x             | https://www.postgresql.org/download/   |
+| **RabbitMQ**   | 3.x              | https://www.rabbitmq.com/download.html |
+| **Postman**    | Última          | https://www.postman.com/downloads/     |
 
 ### Herramientas Opcionales
 
@@ -109,6 +109,7 @@ Cada servicio tiene un archivo `.env` configurado. Verificar que existan:
 ```
 
 **Configuración clave del API Gateway:**
+
 ```env
 RABBITMQ_URL=amqp://logiflow:logiflow123@localhost:5672
 ```
@@ -170,14 +171,14 @@ foreach ($service in $services) {
 
 ### Puertos y Tecnologías
 
-| Puerto | Servicio | GraphQL | REST | RabbitMQ |
-|--------|----------|---------|------|----------|
-| 4000 | API Gateway | ❌ | ✅ | ✅ |
-| 4001 | Auth Service | ✅ | ✅ | ❌ |
-| 4002 | Pedido Service | ✅ | ✅ | ✅ |
-| 4003 | Fleet Service | ✅ | ✅ | ✅ |
-| 4004 | Billing Service | ✅ | ✅ | ✅ |
-| 4005 | Notification Service | ❌ | ✅ | ✅ |
+| Puerto | Servicio             | GraphQL | REST | RabbitMQ |
+| ------ | -------------------- | ------- | ---- | -------- |
+| 4000   | API Gateway          | ❌      | ✅   | ✅       |
+| 4001   | Auth Service         | ✅      | ✅   | ❌       |
+| 4002   | Pedido Service       | ✅      | ✅   | ✅       |
+| 4003   | Fleet Service        | ✅      | ✅   | ✅       |
+| 4004   | Billing Service      | ✅      | ✅   | ✅       |
+| 4005   | Notification Service | ❌      | ✅   | ✅       |
 
 ---
 
@@ -289,7 +290,7 @@ Deberías ver 6 puertos LISTENING (4000-4005).
 
 ### 2. Flujo Básico de Pruebas
 
-#### Paso 1: Registrar Usuario
+#### Paso 1: Registrar Usuario → evento `usuario.creado`
 
 **POST** `http://localhost:4000/auth/register`
 
@@ -297,10 +298,9 @@ Deberías ver 6 puertos LISTENING (4000-4005).
 {
   "username": "cliente1",
   "email": "cliente1@mail.com",
-  "password": "123456",
+  "password": "Test@123456",
   "rol": "ROLE_CLIENTE",
-  "zonaId": "ZONA-1",
-  "tipoFlota": "URBANO"
+  "tipoFlota": "MOTO"
 }
 ```
 
@@ -324,23 +324,96 @@ Deberías ver 6 puertos LISTENING (4000-4005).
 ```json
 {
   "username": "cliente1",
-  "password": "123456"
+  "password": "Test@123456"
 }
 ```
 
-**💾 Guardar el token JWT** para usarlo en las siguientes peticiones.
+**💾 Guardar el token JWT en variable `{{token}}`** para usarlo en las siguientes peticiones.
 
-#### Paso 3: Crear Pedido
+#### Paso 3: Crear Vehículo → evento `vehiculo.creado`
 
-**POST** `http://localhost:4000/pedidos`
+**POST** `http://localhost:4000/fleet/vehiculos`
 
 **Headers:**
+
 ```
-Authorization: Bearer <tu-token-jwt>
+Authorization: Bearer {{token}}
 Content-Type: application/json
 ```
 
 **Body:**
+
+```json
+{
+  "placa": "ABC-123",
+  "marca": "Honda",
+  "modelo": "CBR 500",
+  "color": "Rojo",
+  "anioFabricacion": "2022",
+  "cilindraje": 600
+}
+```
+
+**Respuesta esperada: 201 Created**
+
+#### Paso 4: Crear Repartidor → evento `repartidor.creado`
+
+**POST** `http://localhost:4000/fleet/repartidores`
+
+**Headers:**
+
+```
+Authorization: Bearer {{token}}
+Content-Type: application/json
+```
+
+**Body:**
+
+```json
+{
+  "identificacion": "1100110011",
+  "nombre": "Juan",
+  "apellido": "Perez",
+  "telefono": "0999999999",
+  "email": "juan.perez@mail.com",
+  "licencia": "A123456",
+  "tipoLicencia": "A",
+  "zonaId": "ZONA-1"
+}
+```
+
+#### Paso 5: Asignar Vehículo a Repartidor → evento `repartidor.actualizado`
+
+**PATCH** `http://localhost:4000/fleet/repartidores/1/asignar-vehiculo`
+
+**Headers:**
+
+```
+Authorization: Bearer {{token}}
+Content-Type: application/json
+```
+
+**Body:**
+
+```json
+{
+  "placa": "ABC-123"
+}
+```
+
+#### Paso 6: Crear Pedido → evento `pedido.creado`
+
+**POST** `http://localhost:4000/pedidos`
+
+**Headers:**
+
+```
+Authorization: Bearer {{token}}
+Content-Type: application/json
+```
+
+**Body:**
+
 ```json
 {
   "clienteId": "1",
@@ -348,95 +421,159 @@ Content-Type: application/json
   "direccionDestino": "Calle 10 y Av. 6, Quito",
   "descripcion": "Paquete pequeño - Documentos",
   "tipoEntrega": "URBANO",
-  "zonaId": "ZONA-1",
-  "peso": 2.5,
-  "latOrigen": -0.2163,
-  "lngOrigen": -78.5088,
-  "latDestino": -0.2269,
-  "lngDestino": -78.5249
+  "peso": 2.5
 }
 ```
 
 **Respuesta esperada: 201 Created**
 
-#### Paso 4: Listar Pedidos
-
-**GET** `http://localhost:4000/pedidos`
-
-**Headers:**
-```
-Authorization: Bearer <tu-token-jwt>
-```
-
-#### Paso 5: Cambiar Estado del Pedido
+#### Paso 7: Cambiar Estado del Pedido
 
 **PATCH** `http://localhost:4000/pedidos/1/estado`
 
 **Headers:**
+
 ```
-Authorization: Bearer <tu-token-jwt>
+Authorization: Bearer {{token}}
 Content-Type: application/json
 ```
 
 **Body:**
+
 ```json
 {
   "estado": "EN_RUTA"
 }
 ```
 
-**✅ Esto generará un evento en RabbitMQ → Notification Service**
+#### Paso 8: Confirmar Entrega → evento `pedido.entregado`
+
+**POST** `http://localhost:4000/pedidos/1/confirmar-entrega`
+
+**Headers:**
+
+```
+Authorization: Bearer {{token}}
+```
+
+**Respuesta esperada: 200 OK**
+
+#### Paso 9: Generar Factura → evento `factura.creada`
+
+**POST** `http://localhost:4000/billing/facturas`
+
+**Headers:**
+
+```
+Authorization: Bearer {{token}}
+Content-Type: application/json
+```
+
+**Body:**
+
+```json
+{
+  "pedidoId": "1",
+  "clienteId": "1",
+  "subtotal": 25.50,
+  "descuento": 0,
+  "tipoEntrega": "URBANO"
+}
+```
+
+**Respuesta esperada: 201 Created**
+
+#### Paso 10: Emitir Factura
+
+**POST** `http://localhost:4000/billing/facturas/1/emitir`
+
+**Headers:**
+
+```
+Authorization: Bearer {{token}}
+```
+
+#### Paso 11: Registrar Pago → evento `factura.pagada`
+
+**POST** `http://localhost:4000/billing/facturas/1/pagar`
+
+**Headers:**
+
+```
+Authorization: Bearer {{token}}
+Content-Type: application/json
+```
+
+**Body:**
+
+```json
+{
+  "metodoPago": "TARJETA_CREDITO"
+}
+```
+
+#### Paso 12: Ver Notificaciones Generadas
+
+**GET** `http://localhost:4000/notifications?limit=50`
+
+#### Paso 13 (Opcional): Ver Notificaciones en WebSocket
+
+- Conectar a `ws://localhost:4000/ws?token=<tu-token-jwt>`
+- Enviar:
+
+```json
+{"type":"SUBSCRIBE","topic":"pedido/*"}
+```
 
 ### 3. Endpoints Principales
 
 #### Auth Service
 
-| Método | Ruta | Descripción | Auth |
-|--------|------|-------------|------|
-| POST | `/auth/register` | Registrar usuario | ❌ |
-| POST | `/auth/login` | Iniciar sesión | ❌ |
-| GET | `/auth/me` | Usuario actual | ✅ |
-| GET | `/auth/usuarios` | Listar usuarios | ✅ |
+| Método | Ruta               | Descripción      | Auth |
+| ------- | ------------------ | ----------------- | ---- |
+| POST    | `/auth/register` | Registrar usuario | ❌   |
+| POST    | `/auth/login`    | Iniciar sesión   | ❌   |
+| GET     | `/auth/me`       | Usuario actual    | ✅   |
+| GET     | `/auth/usuarios` | Listar usuarios   | ✅   |
 
 #### Pedido Service
 
-| Método | Ruta | Descripción | Auth |
-|--------|------|-------------|------|
-| POST | `/pedidos` | Crear pedido | ✅ |
-| GET | `/pedidos` | Listar pedidos | ✅ |
-| GET | `/pedidos/:id` | Obtener pedido | ✅ |
-| PATCH | `/pedidos/:id/estado` | Cambiar estado | ✅ |
-| POST | `/pedidos/:id/confirmar-entrega` | Confirmar entrega | ✅ |
-| POST | `/pedidos/:id/cancelar` | Cancelar pedido | ✅ |
+| Método | Ruta                               | Descripción      | Auth |
+| ------- | ---------------------------------- | ----------------- | ---- |
+| POST    | `/pedidos`                       | Crear pedido      | ✅   |
+| GET     | `/pedidos`                       | Listar pedidos    | ✅   |
+| GET     | `/pedidos/:id`                   | Obtener pedido    | ✅   |
+| PATCH   | `/pedidos/:id/estado`            | Cambiar estado    | ✅   |
+| POST    | `/pedidos/:id/confirmar-entrega` | Confirmar entrega | ✅   |
+| POST    | `/pedidos/:id/cancelar`          | Cancelar pedido   | ✅   |
 
 #### Fleet Service
 
-| Método | Ruta | Descripción | Auth |
-|--------|------|-------------|------|
-| POST | `/fleet/vehiculos/moto` | Crear moto | ✅ |
-| POST | `/fleet/vehiculos/liviano` | Crear auto | ✅ |
-| POST | `/fleet/vehiculos/camion` | Crear camión | ✅ |
-| GET | `/fleet/vehiculos` | Listar vehículos | ✅ |
-| POST | `/fleet/repartidores` | Crear repartidor | ✅ |
-| GET | `/fleet/repartidores` | Listar repartidores | ✅ |
+| Método | Ruta                                         | Descripción        | Auth |
+| ------- | -------------------------------------------- | ------------------- | ---- |
+| POST    | `/fleet/vehiculos`                         | Crear vehículo     | ✅   |
+| GET     | `/fleet/vehiculos`                         | Listar vehículos   | ✅   |
+| POST    | `/fleet/repartidores`                      | Crear repartidor    | ✅   |
+| GET     | `/fleet/repartidores`                      | Listar repartidores | ✅   |
+| PATCH   | `/fleet/repartidores/:id/asignar-vehiculo` | Asignar vehículo   | ✅   |
 
 #### Billing Service
 
-| Método | Ruta | Descripción | Auth | Rol |
-|--------|------|-------------|------|-----|
-| POST | `/billing/facturas` | Generar factura | ✅ | GERENTE/ADMIN |
-| GET | `/billing/facturas` | Listar facturas | ✅ | - |
-| POST | `/billing/facturas/:id/emitir` | Emitir factura | ✅ | GERENTE/ADMIN |
-| POST | `/billing/facturas/:id/pagar` | Registrar pago | ✅ | - |
-| GET | `/billing/kpi/diario` | KPI diario | ✅ | - |
+| Método | Ruta                             | Descripción    | Auth | Rol |
+| ------- | -------------------------------- | --------------- | ---- | --- |
+| POST    | `/billing/facturas`            | Generar factura | ✅   | -   |
+| GET     | `/billing/facturas`            | Listar facturas | ✅   | -   |
+| POST    | `/billing/facturas/:id/emitir` | Emitir factura  | ✅   | -   |
+| POST    | `/billing/facturas/:id/pagar`  | Registrar pago  | ✅   | -   |
+| GET     | `/billing/kpi/diario`          | KPI diario      | ✅   | -   |
 
 #### Notification Service
 
-| Método | Ruta | Descripción | Auth |
-|--------|------|-------------|------|
-| GET | `/notifications/notifications` | Listar notificaciones | ❌ |
-| GET | `/notifications/notifications/pending` | Notificaciones pendientes | ❌ |
-| GET | `/notifications/notifications/stats` | Estadísticas | ❌ |
+| Método | Ruta                                     | Descripción              | Auth |
+| ------- | ---------------------------------------- | ------------------------- | ---- |
+| GET     | `/notifications/notifications`         | Listar notificaciones     | ❌   |
+| GET     | `/notifications/notifications/pending` | Notificaciones pendientes | ❌   |
+| GET     | `/notifications/notifications/stats`   | Estadísticas             | ❌   |
 
 ---
 
@@ -468,6 +605,7 @@ mutation Login($input: LoginInput!) {
 ```
 
 **Variables:**
+
 ```json
 {
   "input": {
@@ -493,6 +631,7 @@ mutation CrearPedido($input: CreatePedidoInput!) {
 ```
 
 **Variables:**
+
 ```json
 {
   "input": {
@@ -524,6 +663,7 @@ query ListarPedidos($filtro: PedidoFiltro) {
 ```
 
 **Variables:**
+
 ```json
 {
   "filtro": {
@@ -547,6 +687,7 @@ query FlotaActiva($zonaId: String) {
 ```
 
 **Variables:**
+
 ```json
 {
   "zonaId": "ZONA-1"
@@ -568,6 +709,7 @@ query KPIDiario($fecha: String!, $zonaId: String) {
 ```
 
 **Variables:**
+
 ```json
 {
   "fecha": "2026-02-07",
@@ -665,6 +807,7 @@ Get-NetTCPConnection -LocalPort 4000,4001,4002,4003,4004,4005 -ErrorAction Silen
 **Causa:** Token JWT inválido o expirado
 
 **Solución:**
+
 1. Hacer login nuevamente: `POST /auth/login`
 2. Copiar el nuevo token
 3. Actualizar header: `Authorization: Bearer <nuevo-token>`
@@ -706,6 +849,7 @@ psql -U logiflow -d auth_db -h localhost
 **Causa:** Rutas mal configuradas en los microservicios
 
 **Verificación:**
+
 ```bash
 # Auth service debe usar rutas raíz
 # auth-service/src/index.ts
@@ -716,12 +860,14 @@ app.use('/', authController);  # ✅ Correcto
 ### Logs Útiles
 
 **Ver logs de un servicio específico:**
+
 ```bash
 # En la terminal donde corre el servicio
 # Los logs aparecen automáticamente
 ```
 
 **Verificar tablas en PostgreSQL:**
+
 ```sql
 -- Conectar a cada base
 \c auth_db
@@ -745,13 +891,13 @@ app.use('/', authController);  # ✅ Correcto
 
 ### Roles Disponibles
 
-| Rol | Permisos |
-|-----|----------|
-| `ROLE_CLIENTE` | Crear pedidos, ver sus pedidos |
+| Rol                 | Permisos                                 |
+| ------------------- | ---------------------------------------- |
+| `ROLE_CLIENTE`    | Crear pedidos, ver sus pedidos           |
 | `ROLE_REPARTIDOR` | Ver pedidos asignados, actualizar estado |
-| `ROLE_SUPERVISOR` | Ver pedidos de su zona, reasignar |
-| `ROLE_GERENTE` | Crear facturas, ver KPIs, reportes |
-| `ROLE_ADMIN` | Acceso total al sistema |
+| `ROLE_SUPERVISOR` | Ver pedidos de su zona, reasignar        |
+| `ROLE_GERENTE`    | Crear facturas, ver KPIs, reportes       |
+| `ROLE_ADMIN`      | Acceso total al sistema                  |
 
 ### Estados de Pedido
 

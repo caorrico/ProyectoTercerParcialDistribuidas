@@ -1,0 +1,1296 @@
+{
+  "info": {
+    "_postman_id": "fcd4ea05-b39a-409c-b84d-5e12fdbbaded",
+    "name": "LogiFlow - Delivery Management Platform",
+    "description": "API Collection para pruebas de LogiFlow con microservicios",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "41704944"
+  },
+  "item": [
+    {
+      "name": "Auth Service",
+      "item": [
+        {
+          "name": "1. Register Usuario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"cliente1\",\n  \"email\": \"cliente1@mail.com\",\n  \"password\": \"123456\",\n  \"rol\": \"ROLE_CLIENTE\",\n  \"zonaId\": \"ZONA-1\",\n  \"tipoFlota\": \"URBANO\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4000/auth/register",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Registra un nuevo usuario (cliente, repartidor, supervisor, etc.)"
+          },
+          "response": []
+        },
+        {
+          "name": "2. Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4000/auth/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Obtiene JWT token. Guardar el token para usar en Authorization Bearer"
+          },
+          "response": []
+        },
+        {
+          "name": "3. Get Current User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjODdkN2QyZC1jMzJlLTQyYjUtYTRjYy1kYzQ1YzQ4NjZjMjYiLCJ1c2VybmFtZSI6ImFkbWluIiwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ6b25hSWQiOiJaT05BLTEiLCJ0aXBvRmxvdGEiOiJVUkJBTk8iLCJpYXQiOjE3NzA1Mjg5MDksImV4cCI6MTc3MDYxNTMwOX0.OaIcLNtytXqLBrXTl5pZ7CMpFW_nBb_sDIjqe3VClBA",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4000/auth/me",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Obtiene datos del usuario autenticado actual"
+          },
+          "response": []
+        },
+        {
+          "name": "4. Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4000/auth/usuarios",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "auth",
+                "usuarios"
+              ]
+            },
+            "description": "Obtiene lista de todos los usuarios"
+          },
+          "response": []
+        },
+        {
+          "name": "5. Auth - GraphQL Query",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query { usuarios { id username email roles { nombre } } }\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4000/auth/graphql",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "auth",
+                "graphql"
+              ]
+            },
+            "description": "Consulta GraphQL para obtener usuarios"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Pedido Service",
+      "item": [
+        {
+          "name": "1. Crear Pedido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clienteId\": \"1\",\n  \"direccionOrigen\": \"Av. Siempre Viva 123, Quito\",\n  \"direccionDestino\": \"Calle 10 y Av. 6, Quito\",\n  \"descripcion\": \"Paquete pequeño - Documentos\",\n  \"tipoEntrega\": \"URBANO\",\n  \"zonaId\": \"ZONA-1\",\n  \"peso\": 2.5,\n  \"latOrigen\": -0.2163,\n  \"lngOrigen\": -78.5088,\n  \"latDestino\": -0.2269,\n  \"lngDestino\": -78.5249\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4000/pedidos",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "pedidos"
+              ]
+            },
+            "description": "Crea un nuevo pedido"
+          },
+          "response": []
+        },
+        {
+          "name": "2. Listar Pedidos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4000/pedidos",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "pedidos"
+              ]
+            },
+            "description": "Lista todos los pedidos o con filtros opcionales"
+          },
+          "response": []
+        },
+        {
+          "name": "3. Obtener Pedido por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4000/pedidos/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "pedidos",
+                "1"
+              ]
+            },
+            "description": "Obtiene un pedido específico por su ID"
+          },
+          "response": []
+        },
+        {
+          "name": "4. Cambiar Estado Pedido",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"EN_RUTA\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4000/pedidos/1/estado",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "pedidos",
+                "1",
+                "estado"
+              ]
+            },
+            "description": "Cambia estado del pedido. Estados: RECIBIDO, ASIGNADO, EN_RUTA, ENTREGADO, CANCELADO"
+          },
+          "response": []
+        },
+        {
+          "name": "5. Confirmar Entrega",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4000/pedidos/1/confirmar-entrega",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "pedidos",
+                "1",
+                "confirmar-entrega"
+              ]
+            },
+            "description": "Marca el pedido como ENTREGADO"
+          },
+          "response": []
+        },
+        {
+          "name": "6. Cancelar Pedido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Cliente solicita cancelación\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4000/pedidos/1/cancelar",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "pedidos",
+                "1",
+                "cancelar"
+              ]
+            },
+            "description": "Cancela un pedido con motivo"
+          },
+          "response": []
+        },
+        {
+          "name": "7. Estadísticas Pedidos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4000/pedidos/estadisticas/resumen?zonaId=ZONA-1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "pedidos",
+                "estadisticas",
+                "resumen"
+              ],
+              "query": [
+                {
+                  "key": "zonaId",
+                  "value": "ZONA-1"
+                }
+              ]
+            },
+            "description": "Obtiene estadísticas de pedidos por zona"
+          },
+          "response": []
+        },
+        {
+          "name": "8. Pedidos - GraphQL Query",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($zonaId: String) { pedidos(filtro: { zonaId: $zonaId }) { id codigo estado tipoEntrega clienteId } }\",\n  \"variables\": { \"zonaId\": \"ZONA-1\" }\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4000/pedidos/graphql",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "pedidos",
+                "graphql"
+              ]
+            },
+            "description": "Consulta GraphQL para obtener pedidos con filtros"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Fleet Service",
+      "item": [
+        {
+          "name": "1. Crear Moto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"placa\": \"ABC-123\",\n  \"marca\": \"Honda\",\n  \"modelo\": \"CBR 500\",\n  \"color\": \"Rojo\",\n  \"anioFabricacion\": \"2022\",\n  \"cilindraje\": 600,\n  \"tipoMoto\": \"DEPORTIVA\",\n  \"tieneCasco\": true\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4000/fleet/vehiculos/moto",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "fleet",
+                "vehiculos",
+                "moto"
+              ]
+            },
+            "description": "Crea una nueva moto"
+          },
+          "response": []
+        },
+        {
+          "name": "2. Crear Vehículo Liviano",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"placa\": \"XYZ-789\",\n  \"marca\": \"Toyota\",\n  \"modelo\": \"Corolla\",\n  \"color\": \"Blanco\",\n  \"anioFabricacion\": \"2021\",\n  \"cilindraje\": 1600,\n  \"tipoAuto\": \"SEDAN\",\n  \"tipoCombustible\": \"GASOLINA\",\n  \"numeroPuertas\": 4,\n  \"capacidadMaleteroLitros\": 450,\n  \"capacidadOcupantes\": 5,\n  \"transmision\": \"AUTOMATICA\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4000/fleet/vehiculos/liviano",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "fleet",
+                "vehiculos",
+                "liviano"
+              ]
+            },
+            "description": "Crea un vehículo liviano (auto)"
+          },
+          "response": []
+        },
+        {
+          "name": "3. Crear Camión",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"placa\": \"CAM-001\",\n  \"marca\": \"Volvo\",\n  \"modelo\": \"FH16\",\n  \"color\": \"Azul\",\n  \"anioFabricacion\": \"2020\",\n  \"cilindraje\": 12700,\n  \"capacidadToneladas\": 20,\n  \"tipoCarga\": \"GENERAL\",\n  \"numeroEjes\": 3\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4000/fleet/vehiculos/camion",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "fleet",
+                "vehiculos",
+                "camion"
+              ]
+            },
+            "description": "Crea un camión nueva"
+          },
+          "response": []
+        },
+        {
+          "name": "4. Listar Vehículos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4000/fleet/vehiculos",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "fleet",
+                "vehiculos"
+              ]
+            },
+            "description": "Lista todos los vehículos"
+          },
+          "response": []
+        },
+        {
+          "name": "5. Listar Vehículos Disponibles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4000/fleet/vehiculos?disponibles=true",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "fleet",
+                "vehiculos"
+              ],
+              "query": [
+                {
+                  "key": "disponibles",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Lista solo vehículos disponibles"
+          },
+          "response": []
+        },
+        {
+          "name": "6. Crear Repartidor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificacion\": \"1234567890\",\n  \"nombre\": \"Juan\",\n  \"apellido\": \"Pérez\",\n  \"telefono\": \"0987654321\",\n  \"email\": \"juan.perez@mail.com\",\n  \"licencia\": \"0000001\",\n  \"tipoLicencia\": \"A\",\n  \"zonaId\": \"ZONA-1\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4000/fleet/repartidores",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "fleet",
+                "repartidores"
+              ]
+            },
+            "description": "Crea un nuevo repartidor"
+          },
+          "response": []
+        },
+        {
+          "name": "7. Listar Repartidores",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjODdkN2QyZC1jMzJlLTQyYjUtYTRjYy1kYzQ1YzQ4NjZjMjYiLCJ1c2VybmFtZSI6ImFkbWluIiwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ6b25hSWQiOiJaT05BLTEiLCJ0aXBvRmxvdGEiOiJVUkJBTk8iLCJpYXQiOjE3NzA1Mjg5MDksImV4cCI6MTc3MDYxNTMwOX0.OaIcLNtytXqLBrXTl5pZ7CMpFW_nBb_sDIjqe3VClBA",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4000/fleet/repartidores",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "fleet",
+                "repartidores"
+              ]
+            },
+            "description": "Lista todos los repartidores"
+          },
+          "response": []
+        },
+        {
+          "name": "8. Actualizar Estado Vehículo",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"EN_RUTA\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4000/fleet/vehiculos/ABC-123/estado",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "fleet",
+                "vehiculos",
+                "ABC-123",
+                "estado"
+              ]
+            },
+            "description": "Actualiza estado de un vehículo. Estados: DISPONIBLE, EN_RUTA, MANTENIMIENTO"
+          },
+          "response": []
+        },
+        {
+          "name": "9. Fleet - GraphQL Query",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($zonaId: String) { flotaActiva(zonaId: $zonaId) { total disponibles enRuta mantenimiento } }\",\n  \"variables\": { \"zonaId\": \"ZONA-1\" }\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4000/fleet/graphql",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "fleet",
+                "graphql"
+              ]
+            },
+            "description": "Consulta GraphQL para obtener resumen de flota activa"
+          },
+          "response": []
+        },
+        {
+          "name": "10. Asignar Vehiculo",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjODdkN2QyZC1jMzJlLTQyYjUtYTRjYy1kYzQ1YzQ4NjZjMjYiLCJ1c2VybmFtZSI6ImFkbWluIiwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ6b25hSWQiOiJaT05BLTEiLCJ0aXBvRmxvdGEiOiJVUkJBTk8iLCJpYXQiOjE3NzA1MzA0NDYsImV4cCI6MTc3MDYxNjg0Nn0.tvXv3h9f2E_N4Ykvug4Qc4rn-9gsTnQ2UPt2vwuCYGs",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"placa\": \"ABC-123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:4000/fleet/repartidores/111a32da-96c8-442d-b493-ca91d6067a72/asignar-vehiculo",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "fleet",
+                "repartidores",
+                "111a32da-96c8-442d-b493-ca91d6067a72",
+                "asignar-vehiculo"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Billing Service",
+      "item": [
+        {
+          "name": "1. Generar Factura",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pedidoId\": \"1\",\n  \"clienteId\": \"1\",\n  \"subtotal\": 25.50,\n  \"descuento\": 0,\n  \"tipoEntrega\": \"URBANO\",\n  \"zonaId\": \"ZONA-1\",\n  \"observaciones\": \"Entrega rápida en Quito\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4000/billing/facturas",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "billing",
+                "facturas"
+              ]
+            },
+            "description": "Genera una nueva factura (requiere rol GERENTE o ADMIN)"
+          },
+          "response": []
+        },
+        {
+          "name": "2. Listar Facturas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4000/billing/facturas",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "billing",
+                "facturas"
+              ]
+            },
+            "description": "Lista todas las facturas"
+          },
+          "response": []
+        },
+        {
+          "name": "3. Obtener Factura por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4000/billing/facturas/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "billing",
+                "facturas",
+                "1"
+              ]
+            },
+            "description": "Obtiene una factura específica por ID"
+          },
+          "response": []
+        },
+        {
+          "name": "4. Emitir Factura",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4000/billing/facturas/1/emitir",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "billing",
+                "facturas",
+                "1",
+                "emitir"
+              ]
+            },
+            "description": "Emite una factura (cambia estado de BORRADOR a EMITIDA)"
+          },
+          "response": []
+        },
+        {
+          "name": "5. Registrar Pago",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"metodoPago\": \"TARJETA_CREDITO\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4000/billing/facturas/1/pagar",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "billing",
+                "facturas",
+                "1",
+                "pagar"
+              ]
+            },
+            "description": "Registra el pago de una factura"
+          },
+          "response": []
+        },
+        {
+          "name": "6. Obtener KPI Diario",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4000/billing/kpi/diario?fecha=2026-02-07&zonaId=ZONA-1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "billing",
+                "kpi",
+                "diario"
+              ],
+              "query": [
+                {
+                  "key": "fecha",
+                  "value": "2026-02-07"
+                },
+                {
+                  "key": "zonaId",
+                  "value": "ZONA-1"
+                }
+              ]
+            },
+            "description": "Obtiene KPIs del día (ingresos, cantidad de facturas, etc.)"
+          },
+          "response": []
+        },
+        {
+          "name": "7. Billing - GraphQL Query",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($fecha: String!, $zonaId: String) { kpiDiario(fecha: $fecha, zonaId: $zonaId) { totalFacturado cantidadFacturas facturasPagadas promedioFactura } }\",\n  \"variables\": { \"fecha\": \"2026-02-07\", \"zonaId\": \"ZONA-1\" }\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4000/billing/graphql",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "billing",
+                "graphql"
+              ]
+            },
+            "description": "Consulta GraphQL para obtener KPIs diarios"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Notification Service",
+      "item": [
+        {
+          "name": "1. Listar Notificaciones",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:4000/notifications/notifications?limit=20",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "notifications",
+                "notifications"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Lista todas las notificaciones (sin autenticación requerida)"
+          },
+          "response": []
+        },
+        {
+          "name": "2. Obtener Notificaciones Pendientes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:4000/notifications/notifications/pending",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "notifications",
+                "notifications",
+                "pending"
+              ]
+            },
+            "description": "Obtiene notificaciones no procesadas"
+          },
+          "response": []
+        },
+        {
+          "name": "3. Obtener Estadísticas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:4000/notifications/notifications/stats",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "notifications",
+                "notifications",
+                "stats"
+              ]
+            },
+            "description": "Obtiene estadísticas de notificaciones"
+          },
+          "response": []
+        },
+        {
+          "name": "4. Marcar como Procesada",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:4000/notifications/notifications/1/process",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "notifications",
+                "notifications",
+                "1",
+                "process"
+              ]
+            },
+            "description": "Marca una notificación como procesada"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Health & Status",
+      "item": [
+        {
+          "name": "API Gateway Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:4000/health",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4000",
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Health check del API Gateway"
+          },
+          "response": []
+        },
+        {
+          "name": "Auth Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:4001/health",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4001",
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Health check del Auth Service"
+          },
+          "response": []
+        },
+        {
+          "name": "Pedido Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:4002/health",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4002",
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Health check del Pedido Service"
+          },
+          "response": []
+        },
+        {
+          "name": "Fleet Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:4003/health",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4003",
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Health check del Fleet Service"
+          },
+          "response": []
+        },
+        {
+          "name": "Billing Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:4004/health",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4004",
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Health check del Billing Service"
+          },
+          "response": []
+        },
+        {
+          "name": "Notification Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:4005/health",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4005",
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Health check del Notification Service"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "jwt",
+    "jwt": [
+      {
+        "key": "secret",
+        "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NWM3YTE0MC0yMDFlLTRhMzMtYTBlZS1mMjYyNjgwYTBhMGUiLCJ1c2VybmFtZSI6ImNsaWVudGUxIiwicm9sZXMiOlsiUk9MRV9DTElFTlRFIl0sInpvbmFJZCI6IlpPTkEtMSIsInRpcG9GbG90YSI6IlVSQkFOTyIsImlhdCI6MTc3MDUyNjAxOSwiZXhwIjoxNzcwNjEyNDE5fQ.8mR_bm9BRC5lX-AKDbU4uWhhtMudvdlRUJUrHSM-us0",
+        "type": "string"
+      },
+      {
+        "key": "algorithm",
+        "value": "HS256",
+        "type": "string"
+      },
+      {
+        "key": "isSecretBase64Encoded",
+        "value": false,
+        "type": "boolean"
+      },
+      {
+        "key": "payload",
+        "value": "{}",
+        "type": "string"
+      },
+      {
+        "key": "addTokenTo",
+        "value": "header",
+        "type": "string"
+      },
+      {
+        "key": "headerPrefix",
+        "value": "Bearer",
+        "type": "string"
+      },
+      {
+        "key": "queryParamKey",
+        "value": "token",
+        "type": "string"
+      },
+      {
+        "key": "header",
+        "value": "{}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:4000"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "pedido_id",
+      "value": "1"
+    },
+    {
+      "key": "usuario_id",
+      "value": "1"
+    }
+  ]
+}

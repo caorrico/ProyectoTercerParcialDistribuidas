@@ -1,5 +1,6 @@
 import amqp, { Channel, ConsumeMessage, ChannelModel } from 'amqplib';
 import { NotificationEvent } from './interfaces/notification-event.interface';
+import { notificationService } from '../notifications/service/notification.service';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -24,6 +25,7 @@ const handleMessage = async (msg: ConsumeMessage | null) => {
   try {
     const content = JSON.parse(msg.content.toString()) as NotificationEvent;
     console.log("Mensaje recibido:", content);
+    await notificationService.createFromEvent(content);
     channel.ack(msg);
   } catch (error) {
     console.error("Error procesando mensaje:", error);

@@ -8,29 +8,52 @@ export class NotificationService {
   async createFromEvent(event: NotificationEvent): Promise<Notification> {
     // Verificar si ya existe (idempotencia)
     const existing = await this.notificationRepository.findOne({
-      where: { eventId: event.id }
+      where: { eventId: event.eventId }
     });
 
     if (existing) {
-      console.log(`Evento ${event.id} ya procesado, ignorando...`);
+      console.log(`✅ Evento ${event.eventId} ya procesado, ignorando...`);
       return existing;
     }
 
+    // Determinar los valores basándose en eventType si no vienen en el evento
+    let action = event.action || event.eventType?.toUpperCase().replace('.', '_') || 'UNKNOWN';
+    let entityType = event.entityType || 'UNKNOWN';
+    let message = event.message || `Event: ${event.eventType}`;
+    let severity = (event.severity || 'INFO') as Severity;
+    let entityId = event.entityId || '';
+
+    // Si el evento viene de usuario.*, extraer información
+    if (event.microservice === 'auth-service' && event.data) {
+      entityType = 'USUARIO';
+      entityId = (event.data.usuarioId as string) || 'unknown';
+      if (event.eventType === 'usuario.creado') {
+        action = 'USUARIO_CREADO';
+        message = `Usuario creado: ${event.data.username || 'desconocido'}`;
+      } else if (event.eventType === 'usuario.actualizado') {
+        action = 'USUARIO_ACTUALIZADO';
+        message = `Usuario actualizado: ${event.data.username || 'desconocido'}`;
+      } else if (event.eventType === 'usuario.desactivado') {
+        action = 'USUARIO_DESACTIVADO';
+        message = `Usuario desactivado: ${event.data.username || 'desconocido'}`;
+      }
+    }
+
     const notification = this.notificationRepository.create({
-      eventId: event.id,
+      eventId: event.eventId,
       microservice: event.microservice,
-      action: event.action,
-      entityType: event.entityType,
-      entityId: event.entityId,
-      message: event.message,
-      severity: event.severity as Severity,
+      action,
+      entityType,
+      entityId,
+      message,
+      severity,
       eventTimestamp: new Date(event.timestamp),
       data: event.data,
       processed: false
     });
 
     await this.notificationRepository.save(notification);
-    console.log(`Notificación guardada: ${event.action} - ${event.message}`);
+    console.log(`📝 Notificación guardada: ${action} - ${message}`);
 
     return notification;
   }
