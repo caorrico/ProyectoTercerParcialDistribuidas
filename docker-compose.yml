@@ -40,9 +40,7 @@ services:
 
   # Auth Service
   auth-service:
-    build:
-      context: ./auth-service
-      dockerfile: Dockerfile
+    image: camustheone/logiflow-auth:latest
     container_name: logiflow-auth
     ports:
       - "4001:4001"
@@ -54,6 +52,7 @@ services:
       DB_PASSWORD: postgres
       DB_NAME: logiflow_auth
       JWT_SECRET: logiflow-secret-key-2024
+      JWT_EXPIRATION: 24h
       NODE_ENV: production
     depends_on:
       postgres:
@@ -62,9 +61,7 @@ services:
 
   # Pedido Service
   pedido-service:
-    build:
-      context: ./pedido-service
-      dockerfile: Dockerfile
+    image: camustheone/logiflow-pedido:latest
     container_name: logiflow-pedido
     ports:
       - "4002:4002"
@@ -86,9 +83,7 @@ services:
 
   # Fleet Service
   fleet-service:
-    build:
-      context: ./fleet-service
-      dockerfile: Dockerfile
+    image: camustheone/logiflow-fleet:latest
     container_name: logiflow-fleet
     ports:
       - "4003:4003"
@@ -110,9 +105,7 @@ services:
 
   # Billing Service
   billing-service:
-    build:
-      context: ./billing-service
-      dockerfile: Dockerfile
+    image: camustheone/logiflow-billing:latest
     container_name: logiflow-billing
     ports:
       - "4004:4004"
@@ -134,9 +127,7 @@ services:
 
   # Notification Service
   notification-service:
-    build:
-      context: ./notification-service
-      dockerfile: Dockerfile
+    image: camustheone/logiflow-notification:latest
     container_name: logiflow-notification
     ports:
       - "4005:4005"
@@ -158,9 +149,7 @@ services:
 
   # API Gateway
   api-gateway:
-    build:
-      context: ./api-gateway
-      dockerfile: Dockerfile
+    image: camustheone/logiflow-gateway:latest
     container_name: logiflow-gateway
     ports:
       - "4000:4000"
@@ -182,20 +171,7 @@ services:
       - notification-service
     restart: unless-stopped
 
-  # Frontend
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: logiflow-frontend
-    ports:
-      - "3000:80"
-    environment:
-      VITE_API_URL: http://localhost:4000
-      VITE_WS_URL: ws://localhost:4000/ws
-    depends_on:
-      - api-gateway
-    restart: unless-stopped
+
 
 volumes:
   postgres_data:

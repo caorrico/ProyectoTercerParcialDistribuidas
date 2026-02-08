@@ -16,6 +16,6 @@ RUN npm run build
 # Esto borrará los @types y tsc después de que ya no se necesiten
 RUN npm prune --production
 
-EXPOSE 4004
+EXPOSE 4002
 
 CMD ["npm", "start"]
