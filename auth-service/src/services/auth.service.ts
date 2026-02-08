@@ -8,6 +8,7 @@ import {
 } from './interfaces/interfaces';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { publishUsuarioCreado, publishUsuarioActualizado } from '../messaging/auth.producer';
 
 /**
  * Validación de configuración crítica
@@ -57,6 +58,15 @@ export class AuthService {
     });
 
     await this.usuarioRepository.save(usuario);
+
+    // Publicar evento de usuario creado
+    await publishUsuarioCreado({
+      id: usuario.id,
+      username: usuario.username,
+      email: usuario.email,
+      roles: usuario.roles.map(r => r.nombre),
+      zonaId: usuario.zonaId
+    });
 
     const token = this.generateToken(usuario);
 
@@ -179,12 +189,22 @@ export class AuthService {
     }
 
     Object.assign(usuario, data);
-    return this.usuarioRepository.save(usuario);
+    const usuarioActualizado = await this.usuarioRepository.save(usuario);
+    
+    // Publicar evento de usuario actualizado
+    await publishUsuarioActualizado({
+      id: usuarioActualizado.id,
+      username: usuarioActualizado.username,
+      email: usuarioActualizado.email
+    });
+    
+    return usuarioActualizado;
   }
 
   async deactivateUsuario(id: string): Promise<Usuario> {
     const usuario = await this.usuarioRepository.findOne({
-      where: { id }
+      where: { id },
+      relations: ['roles']
     });
 
     if (!usuario) {
@@ -192,7 +212,18 @@ export class AuthService {
     }
 
     usuario.activo = false;
-    return this.usuarioRepository.save(usuario);
+    const usuarioDesactivado = await this.usuarioRepository.save(usuario);
+    
+    // Publicar evento de usuario desactivado
+    const { publishUsuarioDesactivado } = await import('../messaging/auth.producer');
+    await publishUsuarioDesactivado({
+      id: usuarioDesactivado.id,
+      username: usuarioDesactivado.username,
+      email: usuarioDesactivado.email,
+      roles: usuarioDesactivado.roles.map(r => r.nombre)
+    });
+    
+    return usuarioDesactivado;
   }
 
   private generateToken(usuario: Usuario): string {

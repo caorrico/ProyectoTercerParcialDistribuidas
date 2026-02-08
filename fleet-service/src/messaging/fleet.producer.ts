@@ -149,6 +149,35 @@ export class FleetProducer {
     console.log(`📤 Evento publicado: ${ROUTING_KEYS.REPARTIDOR_UBICACION}`);
   }
 
+  async publishRepartidorActualizado(repartidor: Repartidor, estadoAnterior: string): Promise<void> {
+    const channel = getChannel();
+    if (!channel) return;
+
+    const event = this.createEvent(
+      'REPARTIDOR_ACTUALIZADO',
+      'Repartidor',
+      repartidor.identificacion,
+      `Estado de repartidor ${repartidor.nombre} cambió de ${estadoAnterior} a ${repartidor.estado}`,
+      {
+        id: repartidor.id,
+        identificacion: repartidor.identificacion,
+        nombre: `${repartidor.nombre} ${repartidor.apellido}`,
+        estadoAnterior,
+        estadoNuevo: repartidor.estado,
+        zonaId: repartidor.zonaId
+      }
+    );
+
+    channel.publish(
+      EXCHANGE_NAME,
+      ROUTING_KEYS.REPARTIDOR_ACTUALIZADO,
+      Buffer.from(JSON.stringify(event)),
+      { persistent: true, messageId: event.id }
+    );
+
+    console.log(`📤 Evento publicado: ${ROUTING_KEYS.REPARTIDOR_ACTUALIZADO}`);
+  }
+
   async publishVehiculoAsignado(repartidor: Repartidor, vehiculo: Vehiculo): Promise<void> {
     const channel = getChannel();
     if (!channel) return;

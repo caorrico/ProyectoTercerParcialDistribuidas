@@ -16,9 +16,16 @@ export interface AuthenticatedRequest extends Request {
 
 // Rutas públicas que no requieren autenticación
 const PUBLIC_ROUTES = [
-  '/auth',
   '/health',
-  '/ws'
+  '/ws',
+  '/favicon.ico'
+];
+
+// Rutas de auth que NO requieren token (login, register, refresh)
+const AUTH_PUBLIC_ROUTES = [
+  '/auth/login',
+  '/auth/register',
+  '/auth/token/refresh'
 ];
 
 export const authMiddleware = (
@@ -26,8 +33,11 @@ export const authMiddleware = (
   res: Response,
   next: NextFunction
 ): void => {
+  const path = (req as any).originalPath || req.path;
+  
   // Verificar si es una ruta pública
-  const isPublicRoute = PUBLIC_ROUTES.some(route => req.path.startsWith(route));
+  const isPublicRoute = PUBLIC_ROUTES.some(route => path.startsWith(route)) ||
+                        AUTH_PUBLIC_ROUTES.some(route => path.startsWith(route));
 
   if (isPublicRoute) {
     return next();

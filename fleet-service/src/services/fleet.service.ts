@@ -304,8 +304,12 @@ export class FleetService {
       throw new Error('Repartidor no encontrado');
     }
 
+    const estadoAnterior = repartidor.estado;
     repartidor.estado = estado;
-    return this.repartidorRepository.save(repartidor);
+    const repartidorActualizado = await this.repartidorRepository.save(repartidor);
+    
+    await fleetProducer.publishRepartidorActualizado(repartidorActualizado, estadoAnterior);
+    return repartidorActualizado;
   }
 
   async obtenerFlotaActiva(zonaId?: string): Promise<{

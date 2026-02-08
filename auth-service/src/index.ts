@@ -8,6 +8,7 @@ import { resolvers } from './resolvers';
 import { initializeDatabase } from './utils/database';
 import { authService } from './services/auth.service';
 import authController from './controllers/auth.controller';
+import { connectRabbitMQ } from './messaging/rabbitmq.config';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -40,6 +41,7 @@ const extractUser = (req: express.Request, res: express.Response, next: express.
 
 const startServer = async () => {
   await initializeDatabase();
+  await connectRabbitMQ();
 
   const app = express();
 
@@ -58,7 +60,7 @@ const startServer = async () => {
   });
 
   // REST API routes
-  app.use('/api/auth', authController);
+  app.use('/', authController);
 
   // Apollo Server
   const server = new ApolloServer<Context>({

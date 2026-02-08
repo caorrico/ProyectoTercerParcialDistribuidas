@@ -57,8 +57,8 @@ const startServer = async () => {
   });
 
   // REST API routes
-  app.use('/api/fleet', fleetController);
-  app.use('/api/tracking', trackingController);
+  app.use('/', fleetController);
+  app.use('/tracking', trackingController);
 
   // Apollo Server
   const server = new ApolloServer<Context>({

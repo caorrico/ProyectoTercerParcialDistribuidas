@@ -56,7 +56,7 @@ const startServer = async () => {
   });
 
   // REST API routes
-  app.use('/api/pedidos', pedidoController);
+  app.use('/', pedidoController);
 
   // Apollo Server
   const server = new ApolloServer<Context>({

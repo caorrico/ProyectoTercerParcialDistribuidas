@@ -11,7 +11,8 @@ const ROUTING_PATTERNS = [
   'pedido.*',
   'vehiculo.*',
   'repartidor.*',
-  'factura.*'
+  'factura.*',
+  'usuario.*'
 ];
 
 //tipado explícito de amqplib
