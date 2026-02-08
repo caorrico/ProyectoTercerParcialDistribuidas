@@ -8,8 +8,8 @@ export enum Severity {
 
 @Entity('notifications')
 export class Notification {
-  @PrimaryGeneratedColumn()
-  id!: number;
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
 
   @Column({ name: 'event_id', unique: true })
   eventId!: string;

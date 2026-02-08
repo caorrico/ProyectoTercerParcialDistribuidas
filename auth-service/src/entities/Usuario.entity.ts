@@ -11,8 +11,8 @@ import { Rol } from './Rol.entity';
 
 @Entity('usuarios')
 export class Usuario {
-  @PrimaryGeneratedColumn()
-  id!: number;
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
 
   @Column({ unique: true, length: 50 })
   username!: string;

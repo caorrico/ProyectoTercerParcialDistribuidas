@@ -124,7 +124,7 @@ interface VehiculoGQL {
     tipoLicencia: TipoLicencia!
     estado: TipoEstado!
     zonaId: String
-    usuarioId: Int
+    usuarioId: ID
     vehiculo: VehiculoGQL
     latActual: Float
     lngActual: Float
@@ -187,7 +187,7 @@ interface VehiculoGQL {
     licencia: String!
     tipoLicencia: TipoLicencia!
     zonaId: String
-    usuarioId: Int
+    usuarioId: ID
   }
 
   type Query {

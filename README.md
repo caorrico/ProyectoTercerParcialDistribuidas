@@ -266,6 +266,128 @@ mutation {
 
 3. Usar el token en el header: `Authorization: Bearer <token>`
 
+### Ejemplos de API REST
+
+Todos los microservicios ahora incluyen endpoints REST además de GraphQL.
+
+**Registro y Login (Auth Service - :4001):**
+
+```bash
+# Registrar un cliente
+curl -X POST http://localhost:4001/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "cliente1",
+    "email": "cliente1@test.com",
+    "password": "123456",
+    "rol": "ROLE_CLIENTE"
+  }'
+
+# Registrar un repartidor
+curl -X POST http://localhost:4001/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "repartidor1",
+    "email": "repartidor1@test.com",
+    "password": "123456",
+    "rol": "ROLE_REPARTIDOR"
+  }'
+
+# Registrar un gerente
+curl -X POST http://localhost:4001/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "gerente1",
+    "email": "gerente1@test.com",
+    "password": "123456",
+    "rol": "ROLE_GERENTE"
+  }'
+
+# Login
+curl -X POST http://localhost:4001/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "cliente1",
+    "password": "123456"
+  }'
+```
+
+**Pedidos (Pedido Service - :4002):**
+
+```bash
+# Crear pedido
+curl -X POST http://localhost:4002/api/pedidos \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -d '{
+    "clienteId": "<UUID>",
+    "direccionOrigen": "Av. Principal 123",
+    "direccionDestino": "Calle Secundaria 456",
+    "descripcion": "Paquete pequeño",
+    "tipoEntrega": "URBANO"
+  }'
+
+# Listar pedidos
+curl http://localhost:4002/api/pedidos \
+  -H "Authorization: Bearer <TOKEN>"
+
+# Repartidor toma un pedido
+curl -X POST http://localhost:4002/api/pedidos/<ID>/tomar \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN_REPARTIDOR>" \
+  -d '{"vehiculoId": "<VEHICULO_UUID>"}'
+```
+
+**Flota (Fleet Service - :4003):**
+
+```bash
+# Crear moto
+curl -X POST http://localhost:4003/api/fleet/vehiculos/moto \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN_ADMIN>" \
+  -d '{
+    "placa": "ABC-123",
+    "marca": "Honda",
+    "modelo": "CB500",
+    "color": "Rojo",
+    "anioFabricacion": "2023",
+    "cilindraje": 500,
+    "tipoMoto": "NAKED"
+  }'
+
+# Actualizar ubicación GPS
+curl -X POST http://localhost:4003/api/tracking/track \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN_REPARTIDOR>" \
+  -d '{
+    "repartidorId": "<UUID>",
+    "lat": -0.180653,
+    "lng": -78.467834
+  }'
+
+# Obtener repartidores activos
+curl http://localhost:4003/api/tracking/activos \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+**Facturación - Solo GERENTE (Billing Service - :4004):**
+
+```bash
+# Generar factura
+curl -X POST http://localhost:4004/api/billing/facturas \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN_GERENTE>" \
+  -d '{
+    "pedidoId": "<UUID>",
+    "clienteId": "<UUID>",
+    "subtotal": 25.00
+  }'
+
+# Emitir factura
+curl -X POST http://localhost:4004/api/billing/facturas/<ID>/emitir \
+  -H "Authorization: Bearer <TOKEN_GERENTE>"
+```
+
 ### Ejemplos de Consultas GraphQL
 
 **Crear Pedido (Pedido Service - :4002):**
@@ -382,11 +504,49 @@ ws.send(JSON.stringify({ type: 'SUBSCRIBE', topic: 'pedido/*' }));
 
 ## Docker
 
-### Usando Docker Compose (Recomendado)
+### Opción 1: Solo Infraestructura (Desarrollo Local - Recomendado)
+
+Para desarrollo local, usar `docker-compose.infra.yml` que levanta solo PostgreSQL y RabbitMQ:
+
+```bash
+# Iniciar solo la infraestructura (PostgreSQL + RabbitMQ)
+docker-compose -f docker-compose.infra.yml up -d
+
+# Verificar que los contenedores estén corriendo
+docker ps
+
+# Ver logs
+docker-compose -f docker-compose.infra.yml logs -f
+
+# Detener infraestructura
+docker-compose -f docker-compose.infra.yml down
+
+# Limpiar datos (reset completo)
+docker-compose -f docker-compose.infra.yml down -v
+```
+
+**Accesos después de levantar la infraestructura:**
+
+- PostgreSQL: `localhost:5432` (user: logiflow, password: logiflow123)
+- RabbitMQ Management: http://localhost:15672 (user: logiflow, password: logiflow123)
+
+Luego iniciar los microservicios en modo desarrollo:
+
+```bash
+cd auth-service && npm run dev &
+cd pedido-service && npm run dev &
+cd fleet-service && npm run dev &
+cd billing-service && npm run dev &
+cd notification-service && npm run dev &
+cd frontend && npm run dev &
+```
+
+### Opción 2: Docker Compose Completo
 
 El proyecto incluye un archivo `docker-compose.yml` completo que levanta toda la infraestructura:
 
 **Servicios incluidos:**
+
 - PostgreSQL 15 con múltiples bases de datos
 - RabbitMQ 3 con panel de administración
 - Todos los microservicios
@@ -418,17 +578,17 @@ docker-compose up -d --build auth-service
 ### Puertos Docker
 
 | Servicio     | Puerto Host | Puerto Container |
-|-------------|-------------|-----------------|
-| Frontend    | 3000        | 80              |
-| API Gateway | 4000        | 4000            |
-| Auth        | 4001        | 4001            |
-| Pedidos     | 4002        | 4002            |
-| Fleet       | 4003        | 4003            |
-| Billing     | 4004        | 4004            |
-| Notification| 4005        | 4005            |
-| PostgreSQL  | 5432        | 5432            |
-| RabbitMQ    | 5672        | 5672            |
-| RabbitMQ UI | 15672       | 15672           |
+| ------------ | ----------- | ---------------- |
+| Frontend     | 3000        | 80               |
+| API Gateway  | 4000        | 4000             |
+| Auth         | 4001        | 4001             |
+| Pedidos      | 4002        | 4002             |
+| Fleet        | 4003        | 4003             |
+| Billing      | 4004        | 4004             |
+| Notification | 4005        | 4005             |
+| PostgreSQL   | 5432        | 5432             |
+| RabbitMQ     | 5672        | 5672             |
+| RabbitMQ UI  | 15672       | 15672            |
 
 ### Comandos Útiles Docker
 
@@ -520,13 +680,33 @@ ProyectoTercerParcial/
 
 ## Roles de Usuario
 
-| Rol             | Permisos                                                 |
-| --------------- | -------------------------------------------------------- |
-| ROLE_CLIENTE    | Ver sus pedidos, crear pedidos, ver facturas             |
-| ROLE_REPARTIDOR | Ver asignaciones, actualizar estado, reportar ubicación |
-| ROLE_SUPERVISOR | Gestionar zona, reasignar pedidos, ver métricas         |
-| ROLE_GERENTE    | Acceso completo, KPIs, reportes                          |
-| ROLE_ADMIN      | Administración total del sistema                        |
+| Rol             | Permisos                                                     |
+| --------------- | ------------------------------------------------------------ |
+| ROLE_CLIENTE    | Ver sus pedidos, crear pedidos, ver facturas                 |
+| ROLE_REPARTIDOR | Tomar pedidos, actualizar ubicación GPS, confirmar entregas |
+| ROLE_SUPERVISOR | Gestionar zona, crear vehículos/repartidores, ver métricas |
+| ROLE_GERENTE    | Generar y emitir facturas, KPIs, reportes                    |
+| ROLE_ADMIN      | Administración total del sistema                            |
+
+## Flujo de Estados de Pedido
+
+```
+RECIBIDO ──┬──▶ ASIGNADO ──▶ EN_RUTA ──▶ ENTREGADO
+           │       │
+           │       └──▶ RECIBIDO (desasignar)
+           │
+           └──▶ EN_RUTA ──▶ ENTREGADO  (repartidor toma directamente)
+           │
+           └──▶ CANCELADO
+```
+
+## Características Técnicas
+
+- **UUIDs**: Todos los IDs son UUIDs (v4) en lugar de auto-increment
+- **API Híbrida**: REST + GraphQL en todos los microservicios
+- **Tracking GPS**: Seguimiento en tiempo real con historial
+- **Mensajería Asíncrona**: RabbitMQ para eventos entre servicios
+- **Autenticación JWT**: Con roles y permisos granulares
 
 ---
 
@@ -563,44 +743,13 @@ ProyectoTercerParcial/
 
 ### Frontend
 
+
 - **React 18** + **TypeScript**
 - **Vite** (Build tool)
 - **Apollo Client** (GraphQL client)
 - **React Router 6** (Routing)
 - **Leaflet** (Mapas)
 - **Chart.js** (Gráficos)
-
----
-
-## Solución de Problemas
-
-### Error: "Cannot connect to PostgreSQL"
-
-```bash
-# Verificar que PostgreSQL esté corriendo
-pg_isready -h localhost -p 5432
-
-# Verificar credenciales en .env
-```
-
-### Error: "Cannot connect to RabbitMQ"
-
-```bash
-# Verificar que RabbitMQ esté corriendo
-rabbitmqctl status
-
-# Habilitar plugin de management
-rabbitmq-plugins enable rabbitmq_management
-```
-
-### Error: "EADDRINUSE"
-
-```bash
-# El puerto ya está en uso, verificar qué proceso lo usa
-netstat -ano | findstr :4001
-
-# Matar el proceso o cambiar el puerto en .env
-```
 
 ---
 

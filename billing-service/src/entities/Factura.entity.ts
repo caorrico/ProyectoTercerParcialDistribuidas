@@ -10,17 +10,17 @@ export enum EstadoFactura {
 
 @Entity('facturas')
 export class Factura {
-  @PrimaryGeneratedColumn()
-  id!: number;
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
 
   @Column({ unique: true, name: 'numero_factura' })
   numeroFactura!: string;
 
   @Column({ name: 'pedido_id' })
-  pedidoId!: number;
+  pedidoId!: string;
 
   @Column({ name: 'cliente_id' })
-  clienteId!: number;
+  clienteId!: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   subtotal!: number;

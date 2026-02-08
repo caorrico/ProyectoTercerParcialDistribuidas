@@ -17,7 +17,7 @@ export interface LoginInput {
 export interface AuthPayload {
   token: string;
   usuario: {
-    id: number;
+    id: string;
     username: string;
     email: string;
     roles: string[];
@@ -27,7 +27,7 @@ export interface AuthPayload {
 }
 
 export interface TokenPayload {
-  userId: number;
+  userId: string;
   username: string;
   roles: string[];
   zonaId?: string;

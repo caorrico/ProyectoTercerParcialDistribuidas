@@ -17,17 +17,17 @@ export enum TipoEntrega {
 
 @Entity('pedidos')
 export class Pedido {
-  @PrimaryGeneratedColumn()
-  id!: number;
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
 
   @Column({ unique: true })
   codigo!: string;
 
   @Column({ name: 'cliente_id' })
-  clienteId!: number;
+  clienteId!: string;
 
   @Column({ name: 'repartidor_id', nullable: true })
-  repartidorId?: number;
+  repartidorId?: string;
 
   @Column({ name: 'direccion_origen' })
   direccionOrigen!: string;

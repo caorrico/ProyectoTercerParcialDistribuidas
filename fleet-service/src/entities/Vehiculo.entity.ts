@@ -35,8 +35,8 @@ export enum AutoType {
 @Entity('vehiculos')
 @TableInheritance({ column: { type: 'varchar', name: 'tipo_vehiculo' } })
 export abstract class Vehiculo {
-  @PrimaryGeneratedColumn()
-  id!: number;
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
 
   @Column({ unique: true })
   placa!: string;

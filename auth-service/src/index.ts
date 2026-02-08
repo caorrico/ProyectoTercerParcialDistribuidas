@@ -1,19 +1,20 @@
 import 'reflect-metadata';
+import express from 'express';
+import cors from 'cors';
 import { ApolloServer } from '@apollo/server';
-import { startStandaloneServer } from '@apollo/server/standalone';
+import { expressMiddleware } from '@apollo/server/express4';
 import { typeDefs } from './typeDefs/schema';
 import { resolvers } from './resolvers';
 import { initializeDatabase } from './utils/database';
 import { authService } from './services/auth.service';
+import authController from './controllers/auth.controller';
 import dotenv from 'dotenv';
-import 'dotenv/config';
-
 
 dotenv.config();
 
 interface Context {
   user?: {
-    userId: number;
+    userId: string;
     username: string;
     roles: string[];
     zonaId?: string;
@@ -21,11 +22,45 @@ interface Context {
   };
 }
 
+// Middleware para extraer usuario del token
+const extractUser = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+
+  if (token) {
+    try {
+      const decoded = authService.verifyToken(token);
+      (req as any).user = decoded;
+    } catch {
+      // Token inválido, continuar sin usuario
+    }
+  }
+
+  next();
+};
+
 const startServer = async () => {
-  // Inicializar base de datos
   await initializeDatabase();
 
-  // Crear servidor Apollo
+  const app = express();
+
+  // Middlewares
+  app.use(cors());
+  app.use(express.json());
+  app.use(extractUser);
+
+  // Health check
+  app.get('/health', (_, res) => {
+    res.json({
+      status: 'ok',
+      service: 'auth-service',
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  // REST API routes
+  app.use('/api/auth', authController);
+
+  // Apollo Server
   const server = new ApolloServer<Context>({
     typeDefs,
     resolvers,
@@ -40,9 +75,10 @@ const startServer = async () => {
     }
   });
 
-  // Iniciar servidor
-  const { url } = await startStandaloneServer(server, {
-    listen: { port: parseInt(process.env.PORT || '4001') },
+  await server.start();
+
+  // GraphQL endpoint
+  app.use('/graphql', expressMiddleware(server, {
     context: async ({ req }): Promise<Context> => {
       const token = req.headers.authorization?.replace('Bearer ', '');
 
@@ -57,10 +93,15 @@ const startServer = async () => {
 
       return {};
     }
-  });
+  }));
 
-  console.log(`🚀 Auth Service corriendo en ${url}`);
-  console.log(`📊 GraphQL Playground disponible en ${url}`);
+  const PORT = parseInt(process.env.PORT || '4001');
+  app.listen(PORT, () => {
+    console.log(`\n🚀 Auth Service corriendo en http://localhost:${PORT}`);
+    console.log(`📊 GraphQL Playground: http://localhost:${PORT}/graphql`);
+    console.log(`🔗 REST API: http://localhost:${PORT}/api/auth`);
+    console.log(`❤️  Health: http://localhost:${PORT}/health\n`);
+  });
 };
 
 startServer().catch((error) => {

@@ -9,8 +9,8 @@ export const typeDefs = `#graphql
   type Factura {
     id: ID!
     numeroFactura: String!
-    pedidoId: Int!
-    clienteId: Int!
+    pedidoId: ID!
+    clienteId: ID!
     subtotal: Float!
     descuento: Float!
     impuestos: Float!
@@ -47,8 +47,8 @@ export const typeDefs = `#graphql
   }
 
   input CreateFacturaInput {
-    pedidoId: Int!
-    clienteId: Int!
+    pedidoId: ID!
+    clienteId: ID!
     subtotal: Float!
     descuento: Float
     tipoEntrega: String
@@ -58,8 +58,8 @@ export const typeDefs = `#graphql
 
   input FacturaFiltro {
     estado: EstadoFactura
-    clienteId: Int
-    pedidoId: Int
+    clienteId: ID
+    pedidoId: ID
     zonaId: String
     fechaDesde: String
     fechaHasta: String
@@ -76,7 +76,7 @@ export const typeDefs = `#graphql
     facturas(filtro: FacturaFiltro): [Factura!]!
 
     # Listar facturas por cliente
-    facturasPorCliente(clienteId: Int!): [Factura!]!
+    facturasPorCliente(clienteId: ID!): [Factura!]!
 
     # Obtener KPI diario
     kpiDiario(fecha: String!, zonaId: String): KPIDiario!

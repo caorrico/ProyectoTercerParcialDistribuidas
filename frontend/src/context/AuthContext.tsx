@@ -95,10 +95,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(usuario)
     localStorage.setItem('token', newToken)
     localStorage.setItem('user', JSON.stringify(usuario))
+    // Redirigir según el rol
     if (usuario.roles.includes('ROLE_REPARTIDOR')) {
       navigate('/repartidor')
     } else {
-      navigate('/dashboard')
+      navigate('/')
     }
   }
 
@@ -112,10 +113,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(usuario)
     localStorage.setItem('token', newToken)
     localStorage.setItem('user', JSON.stringify(usuario))
+    // Redirigir según el rol
     if (usuario.roles.includes('ROLE_REPARTIDOR')) {
       navigate('/repartidor')
     } else {
-      navigate('/dashboard')
+      navigate('/')
     }
   }
 

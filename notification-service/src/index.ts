@@ -73,7 +73,7 @@ app.get('/notifications/stats', async (_, res) => {
 // Marcar como procesada
 app.patch('/notifications/:id/process', async (req, res) => {
   try {
-    const notification = await notificationService.markAsProcessed(parseInt(req.params.id));
+    const notification = await notificationService.markAsProcessed(req.params.id);
     res.json(notification);
   } catch (error) {
     res.status(500).json({ error: 'Error al procesar notificación' });

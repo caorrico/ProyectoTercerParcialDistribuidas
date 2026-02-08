@@ -11,12 +11,12 @@ enum RolNombre {
 }
 
 export interface TomarPedidoInput {
-  pedidoId: number;
-  vehiculoId: number;
+  pedidoId: string;
+  vehiculoId: string;
 }
 
 export interface CreatePedidoInput {
-  clienteId: number;
+  clienteId: string;
   direccionOrigen: string;
   direccionDestino: string;
   descripcion: string;
@@ -43,8 +43,8 @@ export interface PedidoFiltro {
   estado?: EstadoPedido;
   tipoEntrega?: TipoEntrega;
   zonaId?: string;
-  clienteId?: number;
-  repartidorId?: number;
+  clienteId?: string;
+  repartidorId?: string;
   fechaDesde?: Date;
   fechaHasta?: Date;
 }
@@ -52,7 +52,7 @@ export interface PedidoFiltro {
 export class PedidoService {
   private pedidoRepository = AppDataSource.getRepository(Pedido);
 
-  async crearPedido(input: CreatePedidoInput,  user: { userId: number; roles: string[] }): Promise<Pedido> {
+  async crearPedido(input: CreatePedidoInput,  user: { userId: string; roles: string[] }): Promise<Pedido> {
     const pedido = this.pedidoRepository.create({
       ...input,
       estado: EstadoPedido.RECIBIDO
@@ -78,7 +78,7 @@ export class PedidoService {
     return pedido;
   }
 
-  async obtenerPedido(id: number): Promise<Pedido | null> {
+  async obtenerPedido(id: string): Promise<Pedido | null> {
     return this.pedidoRepository.findOne({ where: { id } });
   }
 
@@ -119,7 +119,7 @@ export class PedidoService {
 
 async tomarPedido(
     input: TomarPedidoInput,
-    user: { userId: number; roles: string[] }
+    user: { userId: string; roles: string[] }
   ): Promise<Pedido> {
 
     // 1. Validar rol
@@ -155,14 +155,14 @@ async tomarPedido(
   }
 
 
-  async listarPedidosPorCliente(clienteId: number): Promise<Pedido[]> {
+  async listarPedidosPorCliente(clienteId: string): Promise<Pedido[]> {
     return this.pedidoRepository.find({
       where: { clienteId },
       order: { createdAt: 'DESC' }
     });
   }
 
-  async listarPedidosPorRepartidor(repartidorId: number): Promise<Pedido[]> {
+  async listarPedidosPorRepartidor(repartidorId: string): Promise<Pedido[]> {
     return this.pedidoRepository.find({
       where: { repartidorId },
       order: { createdAt: 'DESC' }
@@ -176,7 +176,7 @@ async tomarPedido(
     });
   }
 
-  async actualizarPedido(id: number, input: UpdatePedidoInput): Promise<Pedido> {
+  async actualizarPedido(id: string, input: UpdatePedidoInput): Promise<Pedido> {
     const pedido = await this.pedidoRepository.findOne({ where: { id } });
     if (!pedido) {
       throw new Error('Pedido no encontrado');
@@ -186,7 +186,7 @@ async tomarPedido(
     return this.pedidoRepository.save(pedido);
   }
 
-  async cambiarEstado(id: number, nuevoEstado: EstadoPedido): Promise<Pedido> {
+  async cambiarEstado(id: string, nuevoEstado: EstadoPedido): Promise<Pedido> {
     const pedido = await this.pedidoRepository.findOne({ where: { id } });
     if (!pedido) {
       throw new Error('Pedido no encontrado');
@@ -215,7 +215,7 @@ async tomarPedido(
     return pedido;
   }
 
-  async asignarRepartidor(id: number, repartidorId: number): Promise<Pedido> {
+  async asignarRepartidor(id: string, repartidorId: string): Promise<Pedido> {
     const pedido = await this.pedidoRepository.findOne({ where: { id } });
     if (!pedido) {
       throw new Error('Pedido no encontrado');
@@ -237,7 +237,7 @@ async tomarPedido(
     return pedido;
   }
 
-  async cancelarPedido(id: number, motivo: string): Promise<Pedido> {
+  async cancelarPedido(id: string, motivo: string): Promise<Pedido> {
     const pedido = await this.pedidoRepository.findOne({ where: { id } });
     if (!pedido) {
       throw new Error('Pedido no encontrado');
@@ -287,9 +287,15 @@ async tomarPedido(
   }
 
   private validarTransicionEstado(estadoActual: EstadoPedido, nuevoEstado: EstadoPedido): void {
+    // Transiciones válidas:
+    // RECIBIDO -> ASIGNADO (supervisor asigna), EN_RUTA (repartidor toma), CANCELADO
+    // ASIGNADO -> EN_RUTA (repartidor inicia), RECIBIDO (desasignar), CANCELADO
+    // EN_RUTA -> ENTREGADO (confirmar entrega), CANCELADO
+    // ENTREGADO -> (estado final)
+    // CANCELADO -> (estado final)
     const transicionesValidas: Record<EstadoPedido, EstadoPedido[]> = {
-      [EstadoPedido.RECIBIDO]: [EstadoPedido.ASIGNADO, EstadoPedido.CANCELADO],
-      [EstadoPedido.ASIGNADO]: [EstadoPedido.EN_RUTA, EstadoPedido.CANCELADO],
+      [EstadoPedido.RECIBIDO]: [EstadoPedido.ASIGNADO, EstadoPedido.EN_RUTA, EstadoPedido.CANCELADO],
+      [EstadoPedido.ASIGNADO]: [EstadoPedido.EN_RUTA, EstadoPedido.RECIBIDO, EstadoPedido.CANCELADO],
       [EstadoPedido.EN_RUTA]: [EstadoPedido.ENTREGADO, EstadoPedido.CANCELADO],
       [EstadoPedido.ENTREGADO]: [],
       [EstadoPedido.CANCELADO]: []

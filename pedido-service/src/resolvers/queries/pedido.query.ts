@@ -2,7 +2,7 @@ import { pedidoService, PedidoFiltro } from '../../services/pedido.service';
 
 export const pedidoQueries = {
   pedido: async (_: unknown, { id }: { id: string }) => {
-    return pedidoService.obtenerPedido(parseInt(id));
+    return pedidoService.obtenerPedido(id);
   },
 
   pedidoPorCodigo: async (_: unknown, { codigo }: { codigo: string }) => {
@@ -13,11 +13,11 @@ export const pedidoQueries = {
     return pedidoService.listarPedidos(filtro);
   },
 
-  pedidosPorCliente: async (_: unknown, { clienteId }: { clienteId: number }) => {
+  pedidosPorCliente: async (_: unknown, { clienteId }: { clienteId: string }) => {
     return pedidoService.listarPedidosPorCliente(clienteId);
   },
 
-  pedidosPorRepartidor: async (_: unknown, { repartidorId }: { repartidorId: number }) => {
+  pedidosPorRepartidor: async (_: unknown, { repartidorId }: { repartidorId: string }) => {
     return pedidoService.listarPedidosPorRepartidor(repartidorId);
   },
 

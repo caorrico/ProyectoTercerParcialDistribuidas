@@ -24,14 +24,14 @@ export const fleetMutations = {
   },
 
   asignarVehiculo: async (_: unknown, { repartidorId, placa }: { repartidorId: string; placa: string }, context: any) => {
-    return fleetService.asignarVehiculo(parseInt(repartidorId), placa, context.user);
+    return fleetService.asignarVehiculo(repartidorId, placa, context.user);
   },
 
   actualizarUbicacionRepartidor: async (_: unknown, { id, lat, lng }: { id: string; lat: number; lng: number }, context: any) => {
-    return fleetService.actualizarUbicacionRepartidor(parseInt(id), lat, lng, context.user);
+    return fleetService.actualizarUbicacionRepartidor(id, lat, lng, context.user);
   },
 
   cambiarEstadoRepartidor: async (_: unknown, { id, estado }: { id: string; estado: TipoEstado }, context: any) => {
-    return fleetService.cambiarEstadoRepartidor(parseInt(id), estado, context.user);
+    return fleetService.cambiarEstadoRepartidor(id, estado, context.user);
   }
 };

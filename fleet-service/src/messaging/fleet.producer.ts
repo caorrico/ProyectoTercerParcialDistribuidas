@@ -175,6 +175,45 @@ export class FleetProducer {
 
     console.log(`📤 Evento publicado: ${ROUTING_KEYS.VEHICULO_ASIGNADO}`);
   }
+
+  async publishTrackingPedido(data: {
+    pedidoId: string;
+    repartidorId: string;
+    lat: number;
+    lng: number;
+    timestamp: string;
+    vehiculo?: { id: string; placa: string; tipo: string };
+  }): Promise<void> {
+    const channel = getChannel();
+    if (!channel) return;
+
+    const event = this.createEvent(
+      'TRACKING_PEDIDO',
+      'Tracking',
+      data.pedidoId.toString(),
+      `Tracking actualizado para pedido #${data.pedidoId}`,
+      {
+        pedidoId: data.pedidoId,
+        repartidorId: data.repartidorId,
+        lat: data.lat,
+        lng: data.lng,
+        timestamp: data.timestamp,
+        vehiculo: data.vehiculo
+      }
+    );
+
+    // Usar routing key específico para tracking
+    const routingKey = 'tracking.pedido.actualizado';
+
+    channel.publish(
+      EXCHANGE_NAME,
+      routingKey,
+      Buffer.from(JSON.stringify(event)),
+      { persistent: true, messageId: event.id }
+    );
+
+    console.log(`📤 Evento publicado: ${routingKey}`);
+  }
 }
 
 export const fleetProducer = new FleetProducer();

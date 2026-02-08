@@ -67,7 +67,7 @@ export interface CreateRepartidorInput {
   licencia: string;
   tipoLicencia: string;
   zonaId?: string;
-  usuarioId?: number;
+  usuarioId?: string;
 }
 
 export class FleetService {
@@ -78,7 +78,7 @@ export class FleetService {
   private repartidorRepository = AppDataSource.getRepository(Repartidor);
 
   // VEHÍCULOS
-  async crearMoto(input: CreateMotoInput, user: { userId: number; roles: string[] }): Promise<Moto> {
+  async crearMoto(input: CreateMotoInput, user: { userId: string; roles: string[] }): Promise<Moto> {
     requireRole(user, ADMIN_ROLES);
     
     const motoData = {
@@ -95,7 +95,7 @@ export class FleetService {
     return moto;
   }
 
-  async crearLiviano(input: CreateLivianoInput, user: { userId: number; roles: string[] }): Promise<Liviano> {
+  async crearLiviano(input: CreateLivianoInput, user: { userId: string; roles: string[] }): Promise<Liviano> {
     
     requireRole(user, ADMIN_ROLES);
 
@@ -113,7 +113,7 @@ export class FleetService {
     return liviano;
   }
 
-  async crearCamion(input: CreateCamionInput, user: { userId: number; roles: string[] }): Promise<Camion> {
+  async crearCamion(input: CreateCamionInput, user: { userId: string; roles: string[] }): Promise<Camion> {
     
     requireRole(user, ADMIN_ROLES);
 
@@ -152,11 +152,11 @@ export class FleetService {
     return this.vehiculoRepository.findOne({ where: { placa } });
   }
 
-  async obtenerVehiculo(id: number): Promise<Vehiculo | null> {
+  async obtenerVehiculo(id: string): Promise<Vehiculo | null> {
     return this.vehiculoRepository.findOne({ where: { id } });
   }
 
-  async actualizarEstadoVehiculo(placa: string, estado: EstadoVehiculo, user: { userId: number; roles: string[] }): Promise<Vehiculo> {
+  async actualizarEstadoVehiculo(placa: string, estado: EstadoVehiculo, user: { userId: string; roles: string[] }): Promise<Vehiculo> {
     
     requireRole(user, ADMIN_ROLES);
 
@@ -174,7 +174,7 @@ export class FleetService {
   }
 
   // REPARTIDORES
-  async crearRepartidor(input: CreateRepartidorInput, user: { userId: number; roles: string[] }): Promise<Repartidor> {
+  async crearRepartidor(input: CreateRepartidorInput, user: { userId: string; roles: string[] }): Promise<Repartidor> {
     const exists = await this.repartidorRepository.findOne({
       where: { identificacion: input.identificacion }
     });
@@ -220,14 +220,14 @@ export class FleetService {
     });
   }
 
-  async obtenerRepartidor(id: number): Promise<Repartidor | null> {
+  async obtenerRepartidor(id: string): Promise<Repartidor | null> {
     return this.repartidorRepository.findOne({
       where: { id },
       relations: ['vehiculo']
     });
   }
 
-  async asignarVehiculo(repartidorId: number, placa: string, user: { userId: number; roles: string[] }): Promise<Repartidor> {
+  async asignarVehiculo(repartidorId: string, placa: string, user: { userId: string; roles: string[] }): Promise<Repartidor> {
     const repartidor = await this.repartidorRepository.findOne({
       where: { id: repartidorId },
       relations: ['vehiculo']
@@ -269,7 +269,7 @@ export class FleetService {
     return repartidor;
   }
 
-  async actualizarUbicacionRepartidor(id: number, lat: number, lng: number, user: { userId: number; roles: string[] }): Promise<Repartidor> {
+  async actualizarUbicacionRepartidor(id: string, lat: number, lng: number, user: { userId: string; roles: string[] }): Promise<Repartidor> {
     const repartidor = await this.repartidorRepository.findOne({ where: { id } });
     if (!repartidor) {
       throw new Error('Repartidor no encontrado');
@@ -291,7 +291,7 @@ export class FleetService {
     return repartidor;
   }
 
-  async cambiarEstadoRepartidor(id: number, estado: TipoEstado, user: { userId: number; roles: string[] }): Promise<Repartidor> {
+  async cambiarEstadoRepartidor(id: string, estado: TipoEstado, user: { userId: string; roles: string[] }): Promise<Repartidor> {
     
     requireRole(user, ADMIN_ROLES);
     

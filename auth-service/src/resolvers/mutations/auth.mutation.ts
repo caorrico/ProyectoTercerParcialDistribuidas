@@ -24,10 +24,10 @@ export const authMutations = {
   },
 
   updateUsuario: async (_: unknown, { id, input }: { id: string; input: UpdateUsuarioInput }) => {
-    return authService.updateUsuario(parseInt(id), input);
+    return authService.updateUsuario(id, input);
   },
 
   deactivateUsuario: async (_: unknown, { id }: { id: string }) => {
-    return authService.deactivateUsuario(parseInt(id));
+    return authService.deactivateUsuario(id);
   }
 };

@@ -3,7 +3,7 @@ import { RolNombre } from '../../entities';
 
 interface Context {
   user?: {
-    userId: number;
+    userId: string;
     username: string;
     roles: string[];
   };
@@ -11,7 +11,7 @@ interface Context {
 
 export const authQueries = {
   usuario: async (_: unknown, { id }: { id: string }) => {
-    return authService.getUsuarioById(parseInt(id));
+    return authService.getUsuarioById(id);
   },
 
   usuarios: async () => {

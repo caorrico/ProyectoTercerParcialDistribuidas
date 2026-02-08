@@ -5,8 +5,8 @@ import { billingProducer } from '../messaging/billing.producer';
 const TASA_IMPUESTO = 0.15; // 15% IVA
 
 export interface CreateFacturaInput {
-  pedidoId: number;
-  clienteId: number;
+  pedidoId: string;
+  clienteId: string;
   subtotal: number;
   descuento?: number;
   tipoEntrega?: string;
@@ -16,8 +16,8 @@ export interface CreateFacturaInput {
 
 export interface FacturaFiltro {
   estado?: EstadoFactura;
-  clienteId?: number;
-  pedidoId?: number;
+  clienteId?: string;
+  pedidoId?: string;
   zonaId?: string;
   fechaDesde?: Date;
   fechaHasta?: Date;
@@ -53,7 +53,7 @@ export class BillingService {
     return factura;
   }
 
-  async obtenerFactura(id: number): Promise<Factura | null> {
+  async obtenerFactura(id: string): Promise<Factura | null> {
     return this.facturaRepository.findOne({ where: { id } });
   }
 
@@ -89,14 +89,14 @@ export class BillingService {
     return queryBuilder.getMany();
   }
 
-  async listarFacturasPorCliente(clienteId: number): Promise<Factura[]> {
+  async listarFacturasPorCliente(clienteId: string): Promise<Factura[]> {
     return this.facturaRepository.find({
       where: { clienteId },
       order: { createdAt: 'DESC' }
     });
   }
 
-  async emitirFactura(id: number): Promise<Factura> {
+  async emitirFactura(id: string): Promise<Factura> {
     const factura = await this.facturaRepository.findOne({ where: { id } });
     if (!factura) {
       throw new Error('Factura no encontrada');
@@ -115,7 +115,7 @@ export class BillingService {
     return factura;
   }
 
-  async registrarPago(id: number, metodoPago: string): Promise<Factura> {
+  async registrarPago(id: string, metodoPago: string): Promise<Factura> {
     const factura = await this.facturaRepository.findOne({ where: { id } });
     if (!factura) {
       throw new Error('Factura no encontrada');
@@ -135,7 +135,7 @@ export class BillingService {
     return factura;
   }
 
-  async anularFactura(id: number, motivo: string): Promise<Factura> {
+  async anularFactura(id: string, motivo: string): Promise<Factura> {
     const factura = await this.facturaRepository.findOne({ where: { id } });
     if (!factura) {
       throw new Error('Factura no encontrada');

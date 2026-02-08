@@ -15,7 +15,7 @@ export const fleetQueries = {
   },
 
   vehiculo: async (_: unknown, { id }: { id: string }) => {
-    return fleetService.obtenerVehiculo(parseInt(id));
+    return fleetService.obtenerVehiculo(id);
   },
 
   vehiculoPorPlaca: async (_: unknown, { placa }: { placa: string }) => {
@@ -35,7 +35,7 @@ export const fleetQueries = {
   },
 
   repartidor: async (_: unknown, { id }: { id: string }) => {
-    return fleetService.obtenerRepartidor(parseInt(id));
+    return fleetService.obtenerRepartidor(id);
   },
 
   flotaActiva: async (_: unknown, { zonaId }: { zonaId?: string }) => {

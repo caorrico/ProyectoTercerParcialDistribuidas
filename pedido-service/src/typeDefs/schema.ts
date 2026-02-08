@@ -22,8 +22,8 @@ export const typeDefs = `#graphql
   type Pedido {
     id: ID!
     codigo: String!
-    clienteId: Int!
-    repartidorId: Int
+    clienteId: ID!
+    repartidorId: ID
     direccionOrigen: String!
     direccionDestino: String!
     descripcion: String!
@@ -53,7 +53,7 @@ export const typeDefs = `#graphql
   }
 
   input CreatePedidoInput {
-    clienteId: Int!
+    clienteId: ID!
     direccionOrigen: String!
     direccionDestino: String!
     descripcion: String!
@@ -80,8 +80,8 @@ export const typeDefs = `#graphql
     estado: EstadoPedido
     tipoEntrega: TipoEntrega
     zonaId: String
-    clienteId: Int
-    repartidorId: Int
+    clienteId: ID
+    repartidorId: ID
     fechaDesde: String
     fechaHasta: String
   }
@@ -97,10 +97,10 @@ export const typeDefs = `#graphql
     pedidos(filtro: PedidoFiltro): [Pedido!]!
 
     # Listar pedidos por cliente
-    pedidosPorCliente(clienteId: Int!): [Pedido!]!
+    pedidosPorCliente(clienteId: ID!): [Pedido!]!
 
     # Listar pedidos por repartidor
-    pedidosPorRepartidor(repartidorId: Int!): [Pedido!]!
+    pedidosPorRepartidor(repartidorId: ID!): [Pedido!]!
 
     # Listar pedidos por zona
     pedidosPorZona(zonaId: String!): [Pedido!]!
@@ -120,7 +120,7 @@ export const typeDefs = `#graphql
     cambiarEstadoPedido(id: ID!, estado: EstadoPedido!): Pedido!
 
     # Asignar repartidor a un pedido
-    asignarRepartidor(id: ID!, repartidorId: Int!): Pedido!
+    asignarRepartidor(id: ID!, repartidorId: ID!): Pedido!
 
     # Cancelar pedido
     cancelarPedido(id: ID!, motivo: String!): Pedido!

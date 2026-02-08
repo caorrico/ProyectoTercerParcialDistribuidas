@@ -141,7 +141,7 @@ export class AuthService {
     };
   }
 
-  async getUsuarioById(id: number): Promise<Usuario | null> {
+  async getUsuarioById(id: string): Promise<Usuario | null> {
     return this.usuarioRepository.findOne({
       where: { id },
       relations: ['roles']
@@ -163,7 +163,7 @@ export class AuthService {
   }
 
   async updateUsuario(
-    id: number,
+    id: string,
     data: Partial<Usuario>
   ): Promise<Usuario> {
     const usuario = await this.usuarioRepository.findOne({
@@ -182,7 +182,7 @@ export class AuthService {
     return this.usuarioRepository.save(usuario);
   }
 
-  async deactivateUsuario(id: number): Promise<Usuario> {
+  async deactivateUsuario(id: string): Promise<Usuario> {
     const usuario = await this.usuarioRepository.findOne({
       where: { id }
     });

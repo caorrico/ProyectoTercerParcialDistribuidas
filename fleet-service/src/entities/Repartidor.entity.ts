@@ -15,8 +15,8 @@ export enum TipoLicencia {
 
 @Entity('repartidores')
 export class Repartidor {
-  @PrimaryGeneratedColumn()
-  id!: number;
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
 
   @Column({ unique: true })
   identificacion!: string;
@@ -54,14 +54,14 @@ export class Repartidor {
   zonaId?: string;
 
   @Column({ name: 'usuario_id', nullable: true })
-  usuarioId?: number;
+  usuarioId?: string;
 
   @OneToOne(() => Vehiculo, { nullable: true, eager: true })
   @JoinColumn({ name: 'vehiculo_id' })
   vehiculo?: Vehiculo;
 
   @Column({ name: 'vehiculo_id', nullable: true })
-  vehiculoId?: number;
+  vehiculoId?: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 6, name: 'lat_actual', nullable: true })
   latActual?: number;

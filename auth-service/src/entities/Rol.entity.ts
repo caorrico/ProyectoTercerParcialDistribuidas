@@ -3,8 +3,8 @@ import { RolNombre } from './rol-nombre.enum';
 
 @Entity('roles')
 export class Rol {
-  @PrimaryGeneratedColumn()
-  id!: number;
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
 
   @Column({
     type: 'enum',

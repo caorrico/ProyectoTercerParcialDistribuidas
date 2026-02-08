@@ -2,7 +2,7 @@ import { billingService, FacturaFiltro } from '../../services/billing.service';
 
 export const billingQueries = {
   factura: async (_: unknown, { id }: { id: string }) => {
-    return billingService.obtenerFactura(parseInt(id));
+    return billingService.obtenerFactura(id);
   },
 
   facturaPorNumero: async (_: unknown, { numeroFactura }: { numeroFactura: string }) => {
@@ -13,7 +13,7 @@ export const billingQueries = {
     return billingService.listarFacturas(filtro);
   },
 
-  facturasPorCliente: async (_: unknown, { clienteId }: { clienteId: number }) => {
+  facturasPorCliente: async (_: unknown, { clienteId }: { clienteId: string }) => {
     return billingService.listarFacturasPorCliente(clienteId);
   },
 

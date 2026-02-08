@@ -119,7 +119,7 @@ async publishPedidoEnRuta(pedido: Pedido): Promise<void> {
     console.log(`📤 Evento publicado: ${ROUTING_KEYS.PEDIDO_ACTUALIZADO}`, event.id);
   }
 
-  async publishPedidoAsignado(pedido: Pedido, repartidorId: number): Promise<void> {
+  async publishPedidoAsignado(pedido: Pedido, repartidorId: string): Promise<void> {
     const channel = getChannel();
     if (!channel) {
       console.error('Canal RabbitMQ no disponible');

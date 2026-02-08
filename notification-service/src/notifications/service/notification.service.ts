@@ -35,7 +35,7 @@ export class NotificationService {
     return notification;
   }
 
-  async markAsProcessed(id: number): Promise<Notification> {
+  async markAsProcessed(id: string): Promise<Notification> {
     const notification = await this.notificationRepository.findOne({ where: { id } });
     if (!notification) {
       throw new Error('Notificación no encontrada');
